@@ -5,6 +5,7 @@
     <title>Sign Up</title>
     <link rel="stylesheet" href="styles/login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="scripts/signup-login.js" defer></script>
 </head>
 <body>
 
@@ -67,58 +68,6 @@
 </body>
 </html>
 
-<script>
- document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form");
 
-    form.addEventListener("submit", async function (e) {
-        e.preventDefault(); // Prevent the default form submission
-
-        // Get form data
-        const user_email = document.getElementById("user_email").value;
-        const user_password = document.getElementById("user_password").value;
-
-        const formData = { user_email, user_password };
-
-        // Send login data via AJAX (fetch API)
-        try {
-            const response = await fetch("http://localhost:3000/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                // If login is successful, redirect to /index
-                window.location.href = "/index";
-            } else {
-                // Handle login errors
-                const errorText = await response.text();
-                alert(errorText); // Display the error message
-            }
-        } catch (error) {
-            console.error("Error:", error);
-            alert("There was an error logging in.");
-        }
-    });
-});
-
-  </script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        fetch("/api/session")
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.loggedIn) {
-                    // Redirect to the homepage if already logged in
-                    window.location.href = "/index";
-                }
-            })
-            .catch((err) => console.error("Session check failed:", err));
-    });
-</script>
 
   
