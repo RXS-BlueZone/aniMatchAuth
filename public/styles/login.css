@@ -157,6 +157,7 @@ h2 {
 form {
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 form label {
@@ -253,4 +254,14 @@ form .terms input {
     text-align: center;
     font-size: 3rem;
 
+}
+
+form #errorMessage { 
+    color: red;
+    display: none;
+    font-size: 12px;
+    position: absolute; /* Use absolute positioning */
+    right: 0; /* Align to the right */
+    top: 110px; /* Position under the password input field */
+    z-index: 5;
 }

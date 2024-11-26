@@ -25,39 +25,69 @@ router.get('/api/session', (req, res) => {
     }
 });
 
-
-
-
-
-
 // Signup route
-router.post('/signup', async (req, res) => {
-    const { user_username, user_email, user_password } = req.body;
+const sanitizeHtml = require('sanitize-html');
 
+router.post('/signup', async (req, res) => {
+    let { user_username, user_email, user_password, terms } = req.body;
+
+    const sanitizeInput = (input) => sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
+    user_username = sanitizeInput(user_username);
+    user_email = sanitizeInput(user_email);
+    terms = sanitizeInput(terms);
+
+    const handleError = (res, field, message, code = 400) => {
+        return res.status(code).json({ field, error: message });
+    };
+
+    // Check for missing fields
     if (!user_username || !user_email || !user_password) {
-        return res.status(400).send('All fields are required.');
+        return handleError(res, 'all', 'All fields are required.');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(user_email)) {
+        return handleError(res, 'email', 'Invalid email format.');
+    }
+
+    // Validate username length
+    if (user_username.length < 3 || user_username.length > 20) {
+        return handleError(res, 'username', 'Username must be between 3 and 20 characters.');
+    }
+
+    // Validate password strength
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // At least 8 characters, 1 letter, 1 number
+    if (!passwordRegex.test(user_password)) {
+        return handleError(res, 'password', 'Password must be at least 8 characters with at least one letter and one number.');
+    }
+
+    // Validate terms acceptance
+    if (!terms || terms !== 'on') {
+        return handleError(res, 'terms', 'You must agree to the Terms and Privacy Policy.');
     }
 
     try {
         // Check for existing users by username or email
         const { data: existingUser } = await supabase
             .from("USERS")
-            .select('user_id')
+            .select('user_id, user_email')
             .or(`user_email.eq.${user_email},user_username.eq.${user_username}`)
             .limit(1);
 
         if (existingUser && existingUser.length > 0) {
-            return res.status(400).send('Email or username is already registered.');
+            const conflictField = existingUser[0].user_email === user_email ? 'email' : 'username';
+            return handleError(res, conflictField, 'Email or username is already registered.');
         }
 
         // Hash password and insert new user
-        const hashedPassword = await bcrypt.hash(user_password, 10);
+        const hashedPassword = await bcrypt.hash(user_password, 12);
         await supabase.from('USERS').insert([{ user_username, user_email, user_password: hashedPassword }]);
 
-        res.redirect('/login');
+        return res.status(200).json({ success: true, redirect: '/login' });
     } catch (err) {
-        console.error('Error during signup:', err);
-        res.status(500).send('Server error. Please try again later.');
+        console.error('Signup error: ', { email: user_email, username: user_username, error: err });
+        return handleError(res, 'all', 'Server error. Please try again later.', 500);
     }
 });
 
@@ -66,7 +96,7 @@ router.post('/login', async (req, res) => {
     const { user_email, user_password } = req.body;
 
     if (!user_email || !user_password) {
-        return res.status(400).send('Email and password are required.');
+        return res.status(400).json({ error: 'Email and password are required.' });
     }
 
     try {
@@ -77,12 +107,12 @@ router.post('/login', async (req, res) => {
             .single();
 
         if (error || !user) {
-            return res.status(401).send('Invalid email or password.');
+            return res.status(401).json({ error: 'Invalid email or password.' });
         }
 
         const match = await bcrypt.compare(user_password, user.user_password);
         if (!match) {
-            return res.status(401).send('Invalid email or password.');
+            return res.status(401).json({ error: 'Invalid email or password.' });
         }
 
         // Check if the user has completed onboarding
@@ -96,24 +126,19 @@ router.post('/login', async (req, res) => {
             id: user.user_id,
             username: user.user_username,
             email: user.user_email,
-            genresCompleted: genres && genres.length >= 3, // Set genresCompleted flag
+            genresCompleted: genres && genres.length >= 3,
         };
 
-        // Redirect to appropriate page
         if (!req.session.user.genresCompleted) {
-            return res.redirect('/onboarding');
+            return res.status(200).json({ redirect: '/onboarding' });
         }
 
-        res.redirect('/index');
+        res.status(200).json({ redirect: '/index' });
     } catch (err) {
         console.error('Login error:', err);
-        res.status(500).send('Internal server error');
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-
-
-
 
 // Logout route
 router.get('/logout', (req, res) => {

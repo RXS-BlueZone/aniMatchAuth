@@ -56,10 +56,5 @@ router.post('/api/save-genres', async (req, res) => {
     }
 });
 
-
-
-
-
-
 module.exports = router;
 

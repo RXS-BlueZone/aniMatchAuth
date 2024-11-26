@@ -61,9 +61,63 @@ animeImage.addEventListener('click', () => {
     animeImage.src = imageSources[currentImageIndex];
 });
 
+// Sign uP Error Message
+const signupForm = document.getElementById('signupForm');
 
+signupForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); // Prevent form from submitting traditionally
+    console.log("Signup form submitted!"); // Debugging
 
+    // Clear previous error messages
+    document.querySelectorAll('.error-message').forEach(el => {
+        el.textContent = '';
+        el.style.display = 'none';
+    });
 
+    const formData = new FormData(signupForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await fetch(signupForm.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        console.log(result); // Debugging: Check server response
+
+        if (response.ok) {
+            if (result.redirect) {
+                window.location.href = result.redirect; // Redirect on success
+            }
+        } else {
+            // Display specific error messages under the corresponding fields
+            if (result.field === 'username') {
+                const usernameError = document.getElementById('usernameError');
+                usernameError.textContent = result.error;
+                usernameError.style.display = 'block';
+            } else if (result.field === 'email') {
+                const emailError = document.getElementById('emailError');
+                emailError.textContent = result.error;
+                emailError.style.display = 'block';
+            } else if (result.field === 'password') {
+                const passwordError = document.getElementById('passwordError');
+                passwordError.textContent = result.error;
+                passwordError.style.display = 'block';
+            } else if (result.field === 'terms') {
+                const termsError = document.getElementById('termsError');
+                termsError.textContent = result.error;
+                termsError.style.display = 'block';
+            } else {
+                alert('An unexpected error occurred. Please try again.');
+            }
+        }
+    } catch (err) {
+        console.error('Error during signup:', err);
+        alert('An unexpected error occurred. Please try again later.');
+    }
+});
 
 
 
@@ -125,4 +179,47 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch((err) => console.error("Session check failed:", err));
     });
 
+
+
+
 });
+
+
+//------------------------------------------------------ERRORS----------------------------------------------------
+
+// Login Error Message
+const loginForm = document.getElementById('loginForm');
+const errorMessage = document.getElementById('errorMessage');
+
+loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(loginForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await fetch(loginForm.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            if (result.redirect) {
+                window.location.href = result.redirect; // Redirect if needed
+            }
+        } else {
+            errorMessage.textContent = result.error;
+            errorMessage.style.display = 'block';
+        }
+    } catch (err) {
+        errorMessage.textContent = 'An unexpected error occurred.';
+        errorMessage.style.display = 'block';
+    }
+});
+
+
+
+

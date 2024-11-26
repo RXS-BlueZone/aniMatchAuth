@@ -157,6 +157,7 @@ h2 {
 form {
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 form label {
@@ -231,3 +232,11 @@ form .terms input {
 .register-button:hover {
     background-color: rgb(80, 28, 171); 
 }
+
+.error-message {
+    color: red;
+    font-size: 12px;
+    display: none; /* Hidden by default */
+}
+
+

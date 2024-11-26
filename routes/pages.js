@@ -12,7 +12,6 @@ function isAuthenticated(req, res, next) {
 }
 
 // Middleware to check onboarding completion
-// Middleware to check onboarding completion
 async function isOnboardingComplete(req, res, next) {
     if (req.session.user && req.session.user.genresCompleted) {
         return next(); // Skip if already marked complete in session
@@ -43,7 +42,6 @@ async function isOnboardingComplete(req, res, next) {
     }
 }
 
-
 // Route for the login page
 router.get('/login', (req, res) => {
     if (req.session.user) {
@@ -51,7 +49,6 @@ router.get('/login', (req, res) => {
     }
     res.sendFile(path.join(__dirname, '../public', 'login.html'));
 });
-
 
 // Route for the signup page
 router.get('/signup', (req, res) => {
