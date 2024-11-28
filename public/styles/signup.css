@@ -166,7 +166,7 @@ form label {
     font-weight: bold;
 }
 
-form input {
+.field input {
     margin-bottom: 25px;
     padding: 10px;
     font-size: .9rem;
@@ -176,6 +176,7 @@ form input {
     color: #333; 
     height: 45px;
     padding-left: 7.5px;
+    width: 100%;
 }
 
 form input::placeholder {
@@ -203,12 +204,10 @@ form input:focus {
 form .terms input {
     padding: none !important;
     margin-bottom: none !important;
-    margin-top: -20px
 }
 
 .terms label {
-    font-size: 0.8rem; 
-    margin-top: -22.5px
+    font-size: 0.8rem;
 }
 
 .terms a {
@@ -227,6 +226,7 @@ form .terms input {
     width: 25%;
     height: 3em;
     /* align-self: center; */
+    margin-top: 20px;
 }
 
 .register-button:hover {
@@ -239,4 +239,18 @@ form .terms input {
     display: none; /* Hidden by default */
 }
 
+.field {
+    position: relative;
+    width: 100% !important;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    flex-direction: column;
+}
 
+
+.display-error {
+    position: absolute !important;
+    display: inline !important;
+    bottom: 5px;
+}

@@ -96,20 +96,24 @@ signupForm.addEventListener('submit', async (event) => {
             if (result.field === 'username') {
                 const usernameError = document.getElementById('usernameError');
                 usernameError.textContent = result.error;
-                usernameError.style.display = 'block';
-            } else if (result.field === 'email') {
+                usernameError.style.display = 'inline';
+            }
+            if (result.field === 'email') {
                 const emailError = document.getElementById('emailError');
                 emailError.textContent = result.error;
-                emailError.style.display = 'block';
-            } else if (result.field === 'password') {
+                emailError.style.display = 'inline';
+            }
+            if (result.field === 'password') {
                 const passwordError = document.getElementById('passwordError');
                 passwordError.textContent = result.error;
-                passwordError.style.display = 'block';
-            } else if (result.field === 'terms') {
+                passwordError.classList.add('display-error');
+            }
+            if (result.field === 'terms') {
                 const termsError = document.getElementById('termsError');
                 termsError.textContent = result.error;
-                termsError.style.display = 'block';
-            } else {
+                termsError.style.display = 'inline';
+            }
+            if (result.field === '') {
                 alert('An unexpected error occurred. Please try again.');
             }
         }

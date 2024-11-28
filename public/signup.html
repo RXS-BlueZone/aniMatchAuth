@@ -30,14 +30,20 @@
                 <span>OR</span>
             </div>
             <form id="signupForm" method="POST" action="http://localhost:3000/signup">
-                <input type="text" id="user_username" placeholder="Enter Your Username" name="user_username" required>
-                <p id="usernameError" class="error-message"></p>
+                <div class="field">
+                    <input type="text" id="user_username" placeholder="Enter Your Username" name="user_username" required>
+                    <span id="usernameError" class="error-message"></span>
+                </div>
             
-                <input type="email" id="user_email" placeholder="Enter Your Email" name="user_email" required>
-                <p id="emailError" class="error-message"></p>
+                <div class="field">
+                    <input type="email" id="user_email" placeholder="Enter Your Email" name="user_email" required>
+                    <span id="emailError" class="error-message"></span>
+                </div>
             
-                <input type="password" id="user_password" placeholder="Enter Password" name="user_password" required>
-                <p id="passwordError" class="error-message"></p>
+                <div class="field">
+                    <input type="password" id="user_password" placeholder="Enter Password" name="user_password" required>
+                    <span id="passwordError" class="error-message"></span>
+                </div>
             
                 <div class="terms">
                     <input type="checkbox" id="terms" name="terms">
