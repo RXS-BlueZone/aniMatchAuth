@@ -109,7 +109,6 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-
 // Logout route
 router.get('/logout', (req, res) => {
     req.session.destroy((err) => {
