@@ -84,15 +84,14 @@ router.post('/signup', async (req, res) => {
 
     try {
         // Check for existing users by username or email
-        const { data: existingUser } = await supabase
+        const { data: existingUsers } = await supabase
             .from('USERS')
-            .select('user_id, user_email')
-            .or(`user_email.eq.${user_email},user_username.eq.${user_username}`)
-            .limit(1);
+            .select('user_username, user_email')
+            .or(`user_email.eq.${user_email},user_username.eq.${user_username}`);
 
-        if (existingUser && existingUser.length > 0) {
-            const conflictField = existingUser[0].user_email === user_email ? 'email' : 'username';
-            errors.push({ field: conflictField, error: 'Email or username is already registered.' });
+        if (existingUsers.length > 0) {
+            const conflictField = existingUsers.some(user => user.user_email === user_email) ? 'email' : 'username';
+            errors.push({ field: conflictField, error: `${conflictField} is already registered.` });
             return res.status(400).json({ errors });
         }
 
@@ -106,6 +105,55 @@ router.post('/signup', async (req, res) => {
         return res.status(500).json({
             errors: [{ field: 'all', error: 'Server error. Please try again later.' }],
         });
+    }
+});
+
+// Login route
+router.post('/login', async (req, res) => {
+    const { user_email, user_password } = req.body;
+
+    if (!user_email || !user_password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    try {
+        const { data: user, error } = await supabase
+            .from("USERS")
+            .select('*')
+            .eq('user_email', user_email)
+            .single();
+
+        if (error || !user) {
+            return res.status(401).json({ error: 'Invalid email or password.' });
+        }
+
+        const match = await bcrypt.compare(user_password, user.user_password);
+        if (!match) {
+            return res.status(401).json({ error: 'Invalid email or password.' });
+        }
+
+        // Check if the user has completed onboarding
+        const { data: genres } = await supabase
+            .from("GENRE_PREFERENCES")
+            .select('genre_selected')
+            .eq('user_id', user.user_id);
+
+        // Set session
+        req.session.user = {
+            id: user.user_id,
+            username: user.user_username,
+            email: user.user_email,
+            genresCompleted: genres && genres.length >= 3,
+        };
+
+        if (!req.session.user.genresCompleted) {
+            return res.status(200).json({ redirect: '/onboarding' });
+        }
+
+        res.status(200).json({ redirect: '/index' });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
