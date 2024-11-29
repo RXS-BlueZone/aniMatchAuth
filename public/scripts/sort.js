@@ -242,15 +242,23 @@ document.querySelectorAll(".sort-menu a").forEach((option) => {
 });
 
 // ** Search Event Listener **
+// Add event listener for the search bar
+// Add event listener for the search bar
 searchBar.addEventListener("input", (event) => {
   const searchQuery = event.target.value.trim();
+
   if (searchQuery) {
-    showSortDropdown(); // Show sort dropdown
-    fetchSearchResults(searchQuery); // Fetch and render search results
+    // If there's a search query, show the sort dropdown and clear filters button
+    showSortDropdown();
+    showClearFiltersButton();
+    fetchSearchResults(searchQuery); // Fetch search results with the current query
   } else {
-    resetToDefault(); // Reset to default sections if search is cleared
+    // If the search bar is cleared, reset filters and hide the clear button
+    clearFilters(); // Reset to default sections and hide the clear filters button
   }
 });
+
+
 
 // ** Fetch Search Results with Filters and Sort **
 const fetchSearchResults = async (searchQuery) => {
@@ -289,6 +297,8 @@ const fetchSearchResults = async (searchQuery) => {
     format: filters.format || undefined, // Only include if set
     status: filters.status || undefined, // Only include if set
   };
+
+  showClearFiltersButton();
 
   // Debugging: Log variables being sent to the API
   console.log("Search Query Variables:", variables);
@@ -356,13 +366,15 @@ const hideAllDefaultSections = () => {
 };
 
 // ** Reset to Default Sections **
+// Reset to Default Sections
 const resetToDefault = () => {
-  sortType = null;
   filters = { genre: null, year: null, season: null, format: null, status: null };
-  sortedResultsSection.style.display = "none"; // Hide results section
-  hideSortDropdown(); // Hide sort dropdown
-  showDefaultSections();
+  sortType = null;
+  sortedResultsSection.style.display = "none"; // Hide the sorted results section
+  hideSortDropdown(); // Hide the sort dropdown
+  showDefaultSections(); // Show the default sections
 };
+
 
 // ** Show Default Sections **
 const showDefaultSections = () => {
@@ -427,27 +439,33 @@ const updateViewAllResults = (sortType, season = null, seasonYear = null) => {
 
   // Fetch results with the selected sort type and filters
   fetchAnime("sorted-grid", { ...filters, sort: [sortType] }, 20);
+
+  // Show sort dropdown after results are shown
   showSortDropdown();
+
+  // Show the Clear Filters button after applying filters or sorting
+  showClearFiltersButton();
 };
 
 
-// Show Clear Filters Button
+
+// Show the Clear Filters button
 const showClearFiltersButton = () => {
   document.getElementById("clear-filters-btn").hidden = false;
 };
 
-// Hide Clear Filters Button
+// Hide the Clear Filters button
 const hideClearFiltersButton = () => {
   document.getElementById("clear-filters-btn").hidden = true;
 };
 
+// Clear all filters and reset the page
 // Clear Filters Function
 const clearFilters = () => {
-  // Reset all filters
-  filters = { genre: null, year: null, season: null, format: null, status: null};
+  filters = { genre: null, year: null, season: null, format: null };
   sortType = null;
 
-  // Reset search bar (if needed)
+  // Clear the search bar input
   searchBar.value = "";
 
   // Reset the sort dropdown and hide it
@@ -459,3 +477,24 @@ const clearFilters = () => {
   // Hide the clear filters button once everything is cleared
   hideClearFiltersButton();
 };
+
+
+// Bind the Clear Filters button to the function
+document.getElementById("clear-filters-btn").addEventListener("click", () => {
+  clearFilters();
+});
+
+// Event listener for sorting
+document.querySelectorAll(".sort-menu a").forEach((option) => {
+  option.addEventListener("click", (event) => {
+    event.preventDefault();
+    const sortType = event.target.dataset.sort;
+    if (sortType === "DEFAULT") {
+      resetToDefault();
+      hideClearFiltersButton();
+    } else {
+      updateViewAllResults(sortType, filters.season, filters.year);
+      showClearFiltersButton();
+    }
+  });
+});
