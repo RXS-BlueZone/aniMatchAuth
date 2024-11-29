@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Onboarding</title>
+    <script src="https://cdn.jsdelivr.net/npm/@apollo/client@3.11.8/invariantErrorCodes.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js"></script>
+    <link rel="stylesheet" href="../styles/onboarding.css" />
+  </head>
+  <body>
+    <div class="title">
+      <h1>Select At Least 3 Genres</h1>
+      <button id="done" class="disabled" disabled>Done</button>
+    </div>
+    <div class="container">
+      <div id="genre-list" class="genre-list"></div>
+    </div>
+    <script>
+      const genreList = [];
+
+      function updateButtonState() {
+        const doneButton = document.getElementById("done");
+        if (genreList.length < 3) {
+          doneButton.classList.add("disabled");
+          doneButton.disabled = true;
+        } else {
+          doneButton.classList.remove("disabled");
+          doneButton.disabled = false;
+        }
+      }
+
+      function fetchGenres() {
+        $.ajax({
+          url: "https://graphql.anilist.co",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({
+            query: `
+              query {
+                GenreCollection
+              }
+            `,
+          }),
+          success: function (result) {
+            const genres = result.data.GenreCollection;
+            const container = document.getElementById("genre-list");
+            container.innerHTML = "";
+            genres.forEach((genre) => {
+              const genreCard = document.createElement("div");
+              genreCard.className = "genre-card";
+              genreCard.innerText = genre;
+              genreCard.onclick = function () {
+                genreCard.classList.toggle("selected");
+                genreList.includes(genre)
+                  ? genreList.splice(genreList.indexOf(genre), 1)
+                  : genreList.push(genre);
+                updateButtonState();
+              };
+              container.appendChild(genreCard);
+            });
+          },
+          error: function (error) {
+            console.error(error);
+          },
+        });
+      }
+
+      document.getElementById("done").onclick = function () {
+        if (genreList.length < 3) {
+          alert("Please select at least three genres.");
+        } else {
+          console.log(genreList);
+          // Save the selected genres to local storage
+          //   localStorage.setItem("genres", JSON.stringify(genreList));
+          // Redirect to the home page
+          //   window.location.href = "index.html";
+          alert(genreList.toString());
+        }
+      };
+
+      window.onload = function () {
+        fetchGenres();
+        updateButtonState();
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="styles/styles.css" />
+    <link rel="shortcut icon" href="images/logo.svg" type="image/x-icon" />
+    <link
+      href="https://cdn.jsdelivr.net/gh/eliyantosarage/font-awesome-pro@main/fontawesome-pro-6.5.2-web/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/all.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-thin.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-solid.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-regular.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-light.css"
+    />
+    <script src="
+https://cdn.jsdelivr.net/npm/@apollo/client@3.11.8/invariantErrorCodes.min.js
+"></script>
+    <script src="
+https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js
+"></script>
+    <script src="
+https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
+"></script>
+    <title>AniMatch</title>
+  </head>
+  <body>
+    <div class="container">
+      <button class="to-top" id="to-top">
+        <i class="fa-light fa-arrow-up"></i>
+      </button>
+      <header>
+        <div class="logo">
+          <h1>Ani<span>Match</span></h1>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="about.html">Explore</a></li>
+            <li><a href="contact.html">Recommendations</a></li>
+            <li><a href="contact.html">Profile</a></li>
+          </ul>
+        </nav>
+      </header>
+      <main>
+        <div class="overlay-top-bottom"></div>
+        <div class="marquee">
+          <marquee
+            behavior="sliding"
+            direction="left"
+            class="marquee-content"
+          ></marquee>
+        </div>
+        <div class="content">
+          <h1>Find your perfect anime match!</h1>
+          <p>
+            AniMatch helps you find the perfect anime by recommending one you'll
+            love based on a few quick questions.
+          </p>
+          <button>
+            Get Started &nbsp;&nbsp; <i class="fa-light fa-arrow-right"></i>
+          </button>
+        </div>
+      </main>
+    </div>
+    <div class="container tall">
+      <div class="title title-margin-bottom">
+        <h4>Hot Picks</h4>
+        <h2>Trending Animes Right Now</h2>
+      </div>
+      <div id="anime-list" class="anime-list"></div>
+      <button id="trending-button" class="see-more">
+        See More &nbsp;&nbsp; <i class="fa-light fa-arrow-right"></i>
+      </button>
+    </div>
+    <div class="container tall alt-container">
+      <div class="title title-left">
+        <div class="titles-new-releases">
+          <h4>Freshly Animated</h4>
+          <h2>New Releases</h2>
+        </div>
+        <a href="#"
+          >See More &nbsp;&nbsp;<i class="fa-regular fa-arrow-right"></i
+        ></a>
+      </div>
+      <div id="new-releases-list" class="anime-list"></div>
+    </div>
+    <div class="container short img-bg">
+      <div class="overlay"></div>
+      <div class="title title-white">
+        <h4>Review Movies</h4>
+        <h2>We Provide The Largest Anime<br />Movies Database.</h2>
+      </div>
+      <button class="see-more">
+        View Movies &nbsp;&nbsp; <i class="fa-light fa-arrow-right"></i>
+      </button>
+    </div>
+    <div class="container container-dark">
+      <div class="title title-white title-left title-column">
+        <h4>Top Rated Movies</h4>
+        <h2>Best Anime Movies Of All-Time</h2>
+      </div>
+      <div class="carousel">
+        <button class="carousel-control prev" aria-label="Previous">
+          <i class="fa-light fa-arrow-left"></i>
+        </button>
+        <div class="carousel-track-container">
+          <div id="top-rated-movies" class="carousel-track"></div>
+        </div>
+        <button class="carousel-control next" aria-label="Next">
+          <i class="fa-light fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+    <div class="container short">
+      <div class="opaque-logo">
+        <h1>Ani<span>Match</span></h1>
+      </div>
+      <div class="newsletter">
+        <div class="newsletter-icon">
+          <i class="fa-sharp fa-solid fa-paper-plane"></i>
+        </div>
+        <div class="title title-small">
+          <h2>Get the latest updates delivered<br />straight to your inbox!</h2>
+        </div>
+        <form>
+          <div class="input-field">
+            <input type="email" placeholder="Enter Your Email Address" />
+            <div class="vertical-line"></div>
+            <button type="button">
+              <i class="fa-light fa-paper-plane"></i>Subscribe
+            </button>
+          </div>
+          <div class="terms">
+            <input type="checkbox" id="terms" />
+            <label for="terms">
+              I agree to the <a href="#">Privacy Policy</a>
+            </label>
+          </div>
+        </form>
+      </div>
+    </div>
+    <footer>
+      <div class="footer-content">
+        <div class="footer-left">
+          <div class="logo logo-footer">
+            <h1>Ani<span>Match</span></h1>
+          </div>
+          <div class="mini-newsletter">
+            <div class="mini-newsletter-title">
+              <h4>Newsletter Signup</h4>
+            </div>
+            <form class="form-footer">
+              <div class="input-footer">
+                <i class="fa-thin fa-envelope"></i>
+                <input type="email" placeholder="Enter Your Email Address" />
+                <button type="button">
+                  <i class="fa-light fa-arrow-right"></i>
+                </button>
+              </div>
+            </form>
+            <hr />
+            <div class="terms-footer">
+              <input type="checkbox" id="terms-footer" />
+              <label for="terms-footer">
+                I agree to the <a href="#">Privacy Policy</a>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="footer-right">
+          <div class="title title-left footer-title">
+            <h2>We only provide curated<br />anime listings and tracking</h2>
+          </div>
+          <div class="footer-links">
+            <div class="footer-items">
+              <div class="footer-item">
+                <h4>Socials</h4>
+                <div class="links">
+                  <a href="#"><i class="fa-brands fa-facebook"></i>Facebook</a>
+                  <a href="#"><i class="fa-brands fa-x-twitter"></i>X</a>
+                  <a href="#"
+                    ><i class="fa-brands fa-instagram"></i>Instagram</a
+                  >
+                  <a href="#"><i class="fa-brands fa-youtube"></i>Youtube</a>
+                </div>
+              </div>
+              <div class="footer-item">
+                <h4>Menu</h4>
+                <div class="links">
+                  <a href="#">Services</a>
+                  <a href="#">About Us</a>
+                  <a href="#">FAQs</a>
+                  <a href="#">News</a>
+                  <a href="#">Contacts</a>
+                  <a href="#">Email Us</a>
+                </div>
+              </div>
+              <div class="footer-item">
+                <h4>Legal</h4>
+                <div class="links">
+                  <a href="#">Terms & Conditions</a>
+                  <a href="#">Privacy Policy</a>
+                  <a href="#">Cookies Policy</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr />
+      <div class="footer-bottom">
+        <p>AniMatch &copy; 2024. All Rights Reserved.</p>
+      </div>
+    </footer>
+    <script src="/scripts/index.js"></script>
+    <script>
+      const toTopButton = document.getElementById("to-top");
+
+      window.onscroll = function () {
+        scrollFunction();
+      };
+
+      function scrollFunction() {
+        if (
+          document.body.scrollTop > 20 ||
+          document.documentElement.scrollTop > 20
+        ) {
+          toTopButton.classList.add("show");
+        } else {
+          toTopButton.classList.remove("show");
+        }
+      }
+
+      toTopButton.onclick = function () {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+    </script>
+  </body>
+</html>
