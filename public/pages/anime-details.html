@@ -76,7 +76,7 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
               </div>
               <div class="add-to-fav">
                 <button id="fav-btn">
-                  <i class="fa-solid fa-heart"></i>
+                  <i class="fa-solid fa-heart white-heart"></i>
                 </button>
               </div>
             </div>
@@ -97,17 +97,17 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
     <div class="to-display-container">
       <div class="to-display" id="to-display">
         <div class="display-left">
-          <div class="alltime">
-            <i class="fa-solid fa-star"></i>
+          <div class="alltime" id="rank-item">
+            <i></i>
             <p>
               #<span id="rank-alltime"></span> <span id="rank-context"></span>
             </p>
           </div>
-          <div class="alltime">
-            <i class="fa-solid fa-heart"></i>
+          <div class="alltime" id="rank-item-2">
+            <i></i>
             <p>
-              #<span id="popularity-alltime"></span>
-              <span id="popularity-context"></span>
+              #<span id="rank-alltime-2"></span>
+              <span id="rank-context-2"></span>
             </p>
           </div>
           <div class="anime-additional-info">
@@ -203,125 +203,30 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
               <h6>Tags</h6>
               <div class="tags">
                 <div class="tag-item">
-                  <div class="tags-desc">
-                  </div>
+                  <div class="tags-desc"></div>
                 </div>
               </div>
             </div>
           </div>
           <div class="review-button-container">
-            <button><i class="fa-regular fa-pen-to-square"></i> <span>Write Review</span></button>
+            <button>
+              <i class="fa-regular fa-pen-to-square"></i>
+              <span>Write Review</span>
+            </button>
           </div>
         </div>
         <div class="display-right">
-          <div class="relations-container">
+          <div class="relations-container overview-section">
             <h6>Relations</h6>
             <div class="relations-wrapper">
               <div class="relations-item"></div>
             </div>
           </div>
-          <div class="characters-container">
+          <div class="characters-container overview-section">
             <h6>Characters</h6>
-            <div class="characters">
-              <div class="character-item">
-                <div class="character">
-                  <img src="" alt="" class="character-img" />
-                  <div class="character-details">
-                    <p class="character-name"></p>
-                    <p class="character-role"></p>
-                  </div>
-                </div>
-                <div class="voice-actor">
-                  <div class="va-details">
-                    <p class="va-name"></p>
-                    <p class="va-nationality"></p>
-                  </div>
-                  <img src="" alt="" class="va-img" />
-                </div>
-              </div>
-              <div class="character-item">
-                <div class="character">
-                  <img src="" alt="" class="character-img" />
-                  <div class="character-details">
-                    <p class="character-name"></p>
-                    <p class="character-role"></p>
-                  </div>
-                </div>
-                <div class="voice-actor">
-                  <div class="va-details">
-                    <p class="va-name"></p>
-                    <p class="va-nationality"></p>
-                  </div>
-                  <img src="" alt="" class="va-img" />
-                </div>
-              </div>
-              <div class="character-item">
-                <div class="character">
-                  <img src="" alt="" class="character-img" />
-                  <div class="character-details">
-                    <p class="character-name"></p>
-                    <p class="character-role"></p>
-                  </div>
-                </div>
-                <div class="voice-actor">
-                  <div class="va-details">
-                    <p class="va-name"></p>
-                    <p class="va-nationality"></p>
-                  </div>
-                  <img src="" alt="" class="va-img" />
-                </div>
-              </div>
-              <div class="character-item">
-                <div class="character">
-                  <img src="" alt="" class="character-img" />
-                  <div class="character-details">
-                    <p class="character-name"></p>
-                    <p class="character-role"></p>
-                  </div>
-                </div>
-                <div class="voice-actor">
-                  <div class="va-details">
-                    <p class="va-name"></p>
-                    <p class="va-nationality"></p>
-                  </div>
-                  <img src="" alt="" class="va-img" />
-                </div>
-              </div>
-              <div class="character-item">
-                <div class="character">
-                  <img src="" alt="" class="character-img" />
-                  <div class="character-details">
-                    <p class="character-name"></p>
-                    <p class="character-role"></p>
-                  </div>
-                </div>
-                <div class="voice-actor">
-                  <div class="va-details">
-                    <p class="va-name"></p>
-                    <p class="va-nationality"></p>
-                  </div>
-                  <img src="" alt="" class="va-img" />
-                </div>
-              </div>
-              <div class="character-item">
-                <div class="character">
-                  <img src="" alt="" class="character-img" />
-                  <div class="character-details">
-                    <p class="character-name"></p>
-                    <p class="character-role"></p>
-                  </div>
-                </div>
-                <div class="voice-actor">
-                  <div class="va-details">
-                    <p class="va-name"></p>
-                    <p class="va-nationality"></p>
-                  </div>
-                  <img src="" alt="" class="va-img" />
-                </div>
-              </div>
-            </div>
+            <div class="characters"></div>
           </div>
-          <div class="scores-container">
+          <div class="scores-container overview-section">
             <h6>Score Distribution</h6>
             <div class="scores-distribution-container">
               <div class="scores">
@@ -378,13 +283,13 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
               </div>
             </div>
           </div>
-          <div class="trailer-container">
+          <div class="trailer-container overview-section">
             <h6>Trailer</h6>
             <div class="trailer" id="trailer-container">
               <div id="ytplayer"></div>
             </div>
           </div>
-          <div class="recommendations-container">
+          <div class="recommendations-container overview-section">
             <div class="recommendations-top">
               <h6>Recommendations</h6>
               <div class="recommendation-links">
@@ -393,6 +298,10 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
               </div>
             </div>
             <div class="recommendations"></div>
+          </div>
+          <div class="characters-container" id="characters-section">
+            <h6>Characters</h6>
+            <div class="characters" id="characters2"></div>
           </div>
         </div>
       </div>

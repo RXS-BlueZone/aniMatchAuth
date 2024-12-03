@@ -2,7 +2,15 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchTrendingAnimes();
 });
 
-function fetchTrendingAnimes() {
+let formatList = ["TV", "ONA", "OVA"];
+let rankingInfoList = [];
+let animeObject;
+let characters;
+let anime;
+let animeID;
+let areDataFetched = false;
+
+function fetchTrendingAnimes(perPageCount = 6) {
   $.ajax({
     url: "https://graphql.anilist.co",
     type: "POST",
@@ -11,7 +19,7 @@ function fetchTrendingAnimes() {
       query: `
     query {
       Page(page: 1, perPage: 1) {
-        media(sort: POPULARITY_DESC, type: ANIME) {
+        media(sort: TRENDING_DESC, type: ANIME) {
           id
           title {
             romaji
@@ -86,16 +94,20 @@ function fetchTrendingAnimes() {
   `,
     }),
     success: function (result) {
-      const anime = result.data.Page.media[0];
+      anime = result.data.Page.media[0];
+      animeID = anime.id;
       const scoreDistribution = anime.stats.scoreDistribution;
       displayAnimeDetails(anime);
-      fetchCharacterDetails(anime.id);
-      fetchRelationDetails(anime.id);
-      fetchRecommendationDetails(anime.id);
-      fetchTagDetails(anime.id);
-      fetchProducers(anime.id);
+      fetchCharacterDetails(animeID, perPageCount);
+      fetchCharacterDetails2(animeID);
+      fetchRelationDetails(animeID);
+      fetchRecommendationDetails(animeID);
+      fetchTagDetails(animeID);
+      fetchProducers(animeID);
       displayScoreDistribution(scoreDistribution);
       displayAiringInfo(anime);
+      handleSections(animeID);
+      areDataFetched = true;
     },
     error: function (error) {
       console.error(error);
@@ -199,39 +211,28 @@ function displayAnimeDetails(anime) {
     : "N/A";
   const season = anime.season || "N/A";
   const seasonYear = anime.seasonYear || "N/A";
-  const source = anime.source || "N/A";
+  const source = anime.source
+    ? anime.source
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+    : "N/A";
 
-  let rankingInfoList = [];
+  console.log(anime.rankings);
 
   if (anime.rankings && anime.rankings.length > 0) {
-    const filteredRankings = anime.rankings.filter(
-      (ranking) =>
-        (ranking.type === "RATED" &&
-          ranking.context === "highest rated all time") ||
-        (ranking.type === "POPULAR" &&
-          ranking.context === "most popular all time")
-    );
+    //Sort the rankings by priority
+    anime.rankings.sort((a, b) => {
+      const priorityA = getRankingPriority(a);
+      const priorityB = getRankingPriority(b);
+      return priorityA - priorityB;
+    });
 
-    if (filteredRankings.length > 0) {
-      filteredRankings.forEach((ranking) => {
-        //Use forEach for cleaner code. map is for creating a new array.
-        const rank =
-          ranking.rank !== null && !isNaN(ranking.rank) ? ranking.rank : "N/A";
-        const year =
-          ranking.year !== null && !isNaN(ranking.year) ? ranking.year : "N/A";
-        const season =
-          ranking.season !== null && !isNaN(ranking.season)
-            ? ranking.season
-            : "N/A"; // Added season check
-        rankingInfoList.push({
-          type: ranking.type || "N/A", //Handle null or undefined type
-          context: ranking.context || "N/A", //Handle null or undefined context
-          rank: rank,
-          year: year,
-          season: season,
-        });
-      });
-    } else {
+    //Take up to the top 2 rankings
+    rankingInfoList = anime.rankings.slice(0, 2).map(formatRanking);
+
+    // If fewer than 2 rankings, pad with N/A
+    while (rankingInfoList.length < 2) {
       rankingInfoList.push({
         type: "N/A",
         context: "N/A",
@@ -240,10 +241,28 @@ function displayAnimeDetails(anime) {
         season: "N/A",
       });
     }
+  } else {
+    //Handle no rankings
+    rankingInfoList.push({
+      type: "N/A",
+      context: "N/A",
+      rank: "N/A",
+      year: "N/A",
+      season: "N/A",
+    });
+    rankingInfoList.push({
+      type: "N/A",
+      context: "N/A",
+      rank: "N/A",
+      year: "N/A",
+      season: "N/A",
+    });
   }
 
   const hashtags = anime.hashtag || "N/A";
-  const genres = anime.genres ? anime.genres.join("<br>") : "N/A";
+  const genres = anime.genres
+    ? anime.genres.map((genre) => `<a href=''>${genre}</a>`).join("<br>")
+    : "N/A";
   const synonyms = anime.synonyms ? anime.synonyms.join("<br>") : "N/A";
   const mainStudio = anime.studios.edges
     .map((edge) => edge.node.name)
@@ -257,38 +276,51 @@ function displayAnimeDetails(anime) {
   const formattedEndDate = formatDate(anime.endDate);
 
   document.title = `${anime.title.romaji} (${anime.title.english}) - AniMatch`;
-  document.getElementById("banner-img").src = bannerImage;
+
+  console.log(bannerImage);
+
+  const bannerElement = document.querySelector(".banner");
+  const detailsLeftElement = document.querySelector(".details-left");
+  const bannerImgElement = document.getElementById("banner-img");
+  const header = document.querySelector("header");
+  if (bannerImage) {
+    bannerImgElement.src = bannerImage;
+    bannerElement.style.display = "block";
+    header.classList.remove("no-banner");
+  } else {
+    bannerElement.style.display = "none";
+    detailsLeftElement.style.marginTop = "0";
+    header.classList.add("no-banner");
+  }
+
   document.getElementById("cover-img").src = coverImage;
   document.getElementById("anime-title").textContent = title;
   document.getElementById("anime-description").innerHTML = description;
 
+  const allTimeRank = document.getElementById("rank-alltime");
+  const contextRank = document.getElementById("rank-context");
+  const allTimeRank2 = document.getElementById("rank-alltime-2");
+  const contextRank2 = document.getElementById("rank-context-2");
+
+  const rankItem = document.getElementById("rank-item");
+  const rankItem2 = document.getElementById("rank-item-2");
+
   if (rankingInfoList.length > 1) {
-    // Check if at least two elements exist.
-    document.getElementById("rank-alltime").textContent =
-      rankingInfoList[0].rank;
-    document.getElementById("rank-context").textContent =
-      rankingInfoList[0].context;
-    document.getElementById("popularity-alltime").textContent =
-      rankingInfoList[1].rank;
-    document.getElementById("popularity-context").textContent =
-      rankingInfoList[1].context;
+    displayRanking(0, allTimeRank, contextRank, rankItem);
+    displayRanking(1, allTimeRank2, contextRank2, rankItem2);
   } else if (rankingInfoList.length === 1) {
-    document.getElementById("rank-alltime").textContent =
-      rankingInfoList[0].rank;
-    document.getElementById("rank-context").textContent =
-      rankingInfoList[0].context;
-    document.getElementById("popularity-alltime").textContent = "N/A"; // Or handle appropriately.
-    document.getElementById("popularity-context").textContent = "N/A"; // Or handle appropriately.
+    displayRanking(0, allTimeRank, contextRank, rankItem);
+    rankItem2.style.display = "none";
   } else {
-    document.getElementById("rank-alltime").textContent = "N/A";
-    document.getElementById("rank-context").textContent = "N/A";
-    document.getElementById("popularity-alltime").textContent = "N/A";
-    document.getElementById("popularity-context").textContent = "N/A";
+    rankItem.style.display = "none";
+    rankItem2.style.display = "none";
   }
 
-  document.getElementById("format").textContent = format
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  let formattedFormat = formatList.includes(format)
+    ? format
+    : format.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+
+  document.getElementById("format").textContent = formattedFormat;
   document.getElementById("ep-count").textContent = episodes;
   document.getElementById("ep-duration").textContent = duration + " mins";
   document.getElementById("status").textContent = status
@@ -327,7 +359,7 @@ function displayAnimeDetails(anime) {
 
       if (videoId) {
         new YT.Player("ytplayer", {
-          height: "280",
+          height: "250",
           width: "500",
           videoId: videoId,
           events: {
@@ -391,16 +423,16 @@ function showError(message) {
   playerContainer.style.display = "none"; // Hide the player container if there is an error
 }
 
-function fetchCharacterDetails(animeId) {
+function fetchCharacterDetails(animeId, characterCount = 6) {
   $.ajax({
     url: "https://graphql.anilist.co",
     type: "POST",
     contentType: "application/json",
     data: JSON.stringify({
       query: `
-    query ($id: Int) {
+    query ($id: Int, $perPage: Int) {
       Media(id: $id) {
-        characters(sort: FAVOURITES_DESC, page: 1, perPage: 6) {
+        characters(sort: RELEVANCE, page: 1, perPage: $perPage) {
           edges {
             role
             node {
@@ -427,6 +459,7 @@ function fetchCharacterDetails(animeId) {
   `,
       variables: {
         id: animeId,
+        perPage: characterCount,
       },
     }),
     success: function (result) {
@@ -447,38 +480,55 @@ function fetchCharacterDetails(animeId) {
 }
 
 function displayCharacterDetails(characters) {
-  const characterItems = Array.from(
-    document.querySelectorAll(".character-item")
-  );
+  // Above code
+  const characterContainer = document.querySelector(".characters");
+  characterContainer.innerHTML = ""; // Clear previous content
 
-  characters.forEach((characterEdge, index) => {
-    if (index < characterItems.length) {
-      const characterItem = characterItems[index];
-      const character = characterEdge.node;
-      const role = characterEdge.role;
-      const characterName = character.name.full;
-      const characterImage = character.image.large;
-      const voiceActor = characterEdge.voiceActors[0];
+  if (!characters || characters.length === 0) {
+    console.log("No recommendations found");
+    characterContainer.innerHTML = "<p>No characters found for this anime.</p>";
+    return;
+  }
 
-      characterItem.querySelector(".character-img").src = characterImage;
-      characterItem.querySelector(".character-img").alt = characterName;
-      characterItem.querySelector(".character-name").textContent =
-        characterName;
-      characterItem.querySelector(".character-role").textContent = role
-        .toLowerCase()
-        .replace(/\b\w/g, (char) => char.toUpperCase());
+  characters.forEach((characterEdge) => {
+    const character = characterEdge.node;
+    const role = characterEdge.role;
+    const characterName = character.name.full;
+    const characterImage = character.image.large;
+    const voiceActor = characterEdge.voiceActors[0];
 
-      if (voiceActor) {
-        const vaImage = characterItem.querySelector(".va-img");
-        const vaName = characterItem.querySelector(".va-name");
-        const vaNationality = characterItem.querySelector(".va-nationality");
+    const formattedRole = role
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
 
-        vaImage.src = voiceActor.image.large;
-        vaImage.alt = voiceActor.name.full;
-        vaName.textContent = voiceActor.name.full;
-        vaNationality.textContent = voiceActor.languageV2;
-      }
-    }
+    const characterItemHTML = `
+      <div class="character-item">
+        <div class="character-img-container">
+          <img src="${characterImage}" alt="${characterName}" class="character-img" />
+        </div>
+        <div class="character-details">
+          <p class="character-name">${characterName}</p>
+          <p class="character-role">${formattedRole}</p>
+        </div>
+        ${
+          voiceActor
+            ? `
+          <div class="voice-actor">
+            <div class="va-details">
+              <p class="va-name">${voiceActor.name.full}</p>
+              <p class="va-nationality">${voiceActor.languageV2}</p>
+            </div>
+            <div class="va-img-container">
+              <img src="${voiceActor.image.large}" alt="${voiceActor.name.full}" class="va-img" />
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+
+    characterContainer.innerHTML += characterItemHTML;
   });
 }
 
@@ -503,6 +553,10 @@ function displayRelationDetails(relations) {
     const status = relation.status || "N/A";
     const format = relation.format || "N/A";
 
+    let formattedFormat = formatList.includes(format)
+      ? format
+      : format.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+
     const relationItem = `
       <div class="relations-item">
         <img src="${coverImage}" alt="${title}" class="relation-img" />
@@ -512,9 +566,7 @@ function displayRelationDetails(relations) {
             <p class="relation-title">${title}</p>
           </div>
           <div>
-            <p class="relation-format">${format
-              .toLowerCase()
-              .replace(/\b\w/g, (char) => char.toUpperCase())}</p>
+            <p class="relation-format">${formattedFormat}</p>
             <p>•</p>
             <p class="relation-status">${status
               .toLowerCase()
@@ -536,7 +588,7 @@ function fetchRecommendationDetails(animeId) {
       query: `
     query ($id: Int) {
       Media(id: $id) {
-        recommendations(page: 1, perPage: 7) {
+        recommendations(sort: RATING_DESC, page: 1, perPage: 7) {
           edges {
             node {
               mediaRecommendation {
@@ -711,18 +763,16 @@ function displayScoreDistribution(scoreDistribution) {
 
   for (const score in scoreDistribution) {
     const scoreData = scoreDistribution[score];
-    //Improved selector, uses data.score directly as ID
     const selector = `.score-item .score-span[id="${scoreData.score}"]`;
     const scoreSpan = document.querySelector(selector);
     const scoreCountSpan =
       scoreSpan.parentElement.querySelector(".score-count");
-    const scoreCateg = scoreSpan.parentElement.querySelector(".score-categ"); // Get score-count from parent
+    const scoreCateg = scoreSpan.parentElement.querySelector(".score-categ");
 
     if (!scoreSpan || !scoreCountSpan || !scoreCateg) {
-      console.error("Score span or score count span not found."); // Skip to the next iteration if elements are not found
+      console.error("Score span or score count span not found.");
     }
 
-    //Set score count
     scoreCountSpan.textContent = scoreData.amount;
     scoreCateg.textContent = scoreData.score;
 
@@ -734,65 +784,9 @@ function displayScoreDistribution(scoreDistribution) {
     }
 
     let height;
-    if (scoreData.amount < maxAmount * 0.2) {
-      height = "15"; //Minimum height
-    } else {
-      height = percentage * containerHeight;
-    }
+    height = percentage * containerHeight;
     scoreSpan.style.height = `${height}px`;
   }
-}
-function displayRelationDetails(relations) {
-  console.log("displayRelationDetails called with relations:", relations);
-  const relationContainer = document.querySelector(".relations-wrapper");
-  relationContainer.innerHTML = "";
-  console.log("Cleared previous content in relation container");
-
-  if (!relations || relations.length === 0) {
-    console.log("No relations found");
-    relationContainer.innerHTML = "<p>No relations found for this anime.</p>";
-    return;
-  }
-
-  for (const relationEdge of relations) {
-    const relation = relationEdge.node;
-    const title =
-      relation.title.english ||
-      relation.title.romaji ||
-      relation.title.native ||
-      "No Title Available";
-    const coverImage = relation.coverImage.extraLarge || "";
-    const status = relation.status || "N/A";
-    const format = relation.format || "N/A";
-
-    console.log(
-      `Title: ${title}, Cover Image: ${coverImage}, Status: ${status}, Format: ${format}`
-    );
-
-    const relationItem = `
-      <div class="relations-item">
-        <img src="${coverImage}" alt="${title}" class="relation-img" />
-        <div class="relation-details">
-          <div>
-            <p>Source</p>  <!-- Added source -->
-            <p class="relation-title">${title}</p>
-          </div>
-          <div>
-            <p class="relation-format">${format
-              .toLowerCase()
-              .replace(/\b\w/g, (char) => char.toUpperCase())}</p>
-            <p>•</p>
-            <p class="relation-status">${status
-              .toLowerCase()
-              .replace(/\b\w/g, (char) => char.toUpperCase())}</p>
-          </div>
-        </div>
-      </div>
-    `;
-    relationContainer.innerHTML += relationItem; //More efficient than appendChild in a loop
-  }
-
-  console.log("Finished processing all relations");
 }
 
 function fetchRelationDetails(animeId) {
@@ -873,4 +867,234 @@ function formatDate(dateObject) {
     month: "short",
     day: "numeric",
   }).format(date);
+}
+
+function formatRanking(ranking) {
+  const rank =
+    ranking.rank !== null && !isNaN(ranking.rank) ? ranking.rank : "N/A";
+  const year =
+    ranking.year !== null && !isNaN(ranking.year) ? ranking.year : "N/A";
+  const season = ranking.season !== null ? ranking.season : "N/A";
+  return {
+    type: ranking.type || "N/A",
+    context: ranking.context || "N/A",
+    rank: rank,
+    year: year,
+    season: season,
+  };
+}
+
+function displayRanking(index, rankElement, contextElement, containerElement) {
+  const ranking = rankingInfoList[index];
+
+  // Remove any existing icon
+  const existingIcon = containerElement.querySelector("i");
+  if (existingIcon) {
+    containerElement.removeChild(existingIcon);
+  }
+
+  if (ranking.rank !== "N/A") {
+    rankElement.textContent = ranking.rank;
+    let contextText = ranking.context;
+
+    //Corrected logic for parenthesis and display
+    if (ranking.year !== "N/A" && ranking.season !== "N/A") {
+      contextText += ` ${ranking.season
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase())} ${ranking.year}`;
+    } else if (ranking.year !== "N/A") {
+      contextText += ` ${ranking.year}`;
+    } else if (ranking.season !== "N/A") {
+      contextText += ` ${ranking.season}`;
+    }
+
+    contextElement.textContent = contextText;
+
+    const icon = document.createElement("i");
+    icon.classList.add("fa-solid");
+    if (ranking.context.includes("rated")) {
+      icon.classList.add("fa-star");
+    } else if (ranking.context.includes("popular")) {
+      icon.classList.add("fa-heart");
+    }
+
+    if (containerElement.firstChild) {
+      containerElement.insertBefore(icon, containerElement.firstChild);
+    } else {
+      containerElement.appendChild(icon);
+    }
+  } else {
+    rankElement.textContent = "N/A";
+    contextElement.textContent = "N/A";
+    containerElement.style.display = "none";
+  }
+}
+
+function getRankingPriority(ranking) {
+  if (
+    ranking.type === "RATED" &&
+    ranking.context === "highest rated all time"
+  ) {
+    return 1;
+  } else if (
+    ranking.type === "POPULAR" &&
+    ranking.context === "most popular all time"
+  ) {
+    return 2;
+  } else if (
+    ranking.type === "RATED" &&
+    ranking.context === "highest rated" &&
+    ranking.season === null
+  ) {
+    return 3;
+  } else {
+    return 4; // Lower priority for other rankings
+  }
+}
+
+function handleSections(animeId) {
+  const overviewBtn = document.getElementById("overview-btn");
+  const charactersBtn = document.getElementById("characters-btn");
+  const overviewSections = document.querySelectorAll(".overview-section");
+  const charactersSection = document.getElementById("characters-section");
+
+  // Ensure elements exist before adding event listeners.  This is crucial.
+  if (
+    !overviewBtn ||
+    !charactersBtn ||
+    !overviewSections ||
+    !charactersSection
+  ) {
+    console.error("DOM elements not found in handleSections");
+    return; //Exit early if elements are not found.
+  }
+
+  // Set initial state - show overview
+  overviewSections.forEach((section) => (section.style.display = "block")); //Use block instead of flex to ensure consistent behavior across browsers.
+  charactersSection.style.display = "none";
+  overviewBtn.classList.add("active-section");
+  charactersBtn.classList.remove("active-section");
+
+  overviewBtn.addEventListener("click", () => {
+    overviewSections.forEach((section) => (section.style.display = "block"));
+    charactersSection.style.display = "none";
+    overviewBtn.classList.add("active-section");
+    charactersBtn.classList.remove("active-section");
+  });
+
+  charactersBtn.addEventListener("click", () => {
+    overviewSections.forEach((section) => (section.style.display = "none"));
+    charactersSection.style.display = "block";
+    overviewBtn.classList.remove("active-section");
+    charactersBtn.classList.add("active-section");
+  });
+}
+
+function displayCharacterDetails2(characters) {
+  // Above code
+  const characterContainer = document.getElementById("characters2");
+  characterContainer.innerHTML = ""; // Clear previous content
+
+  if (!characters || characters.length === 0) {
+    console.log("No recommendations found");
+    characterContainer.innerHTML = "<p>No characters found for this anime.</p>";
+    return;
+  }
+
+  for (const characterEdge of characters) {
+    const character = characterEdge.node;
+    const role = characterEdge.role;
+    const characterName = character.name.full;
+    const characterImage = character.image.large;
+    const voiceActor = characterEdge.voiceActors[0];
+
+    const formattedRole = role
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+    const characterItemHTML = `
+      <div class="character-item">
+        <div class="character-img-container">
+          <img src="${characterImage}" alt="${characterName}" class="character-img" />
+        </div>
+        <div class="character-details">
+          <p class="character-name">${characterName}</p>
+          <p class="character-role">${formattedRole}</p>
+        </div>
+        ${
+          voiceActor
+            ? `
+          <div class="voice-actor">
+            <div class="va-details">
+              <p class="va-name">${voiceActor.name.full}</p>
+              <p class="va-nationality">${voiceActor.languageV2}</p>
+            </div>
+            <div class="va-img-container">
+              <img src="${voiceActor.image.large}" alt="${voiceActor.name.full}" class="va-img" />
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+
+    characterContainer.innerHTML += characterItemHTML;
+  }
+}
+
+function fetchCharacterDetails2(animeId) {
+  $.ajax({
+    url: "https://graphql.anilist.co",
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({
+      query: `
+    query ($id: Int) {
+      Media(id: $id) {
+        characters(sort: RELEVANCE) {
+          edges {
+            role
+            node {
+              name {
+                full
+              }
+              image {
+                large
+              }
+            }
+            voiceActors(language: JAPANESE) {
+              name {
+                full
+              }
+              languageV2
+              image {
+                large
+              }
+            }
+          }
+        }
+      }
+    }
+  `,
+      variables: {
+        id: animeId,
+      },
+    }),
+    success: function (result) {
+      const characters = result.data.Media.characters.edges;
+
+      const sortedCharacters = characters.sort((a, b) => {
+        if (a.role === "MAIN" && b.role !== "MAIN") return -1;
+        if (a.role !== "MAIN" && b.role === "MAIN") return 1;
+        return b.node.favourites - a.node.favourites;
+      });
+
+      displayCharacterDetails2(sortedCharacters);
+      characters = sortedCharacters;
+    },
+    error: function (error) {
+      console.error(error);
+    },
+  });
 }
