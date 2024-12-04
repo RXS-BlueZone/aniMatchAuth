@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../styles/read-review.css" />
+    <link rel="stylesheet" href="../styles/footer.css" />
+    <link rel="shortcut icon" href="../images/logo.svg" type="image/x-icon" />
+    <link
+      href="https://cdn.jsdelivr.net/gh/eliyantosarage/font-awesome-pro@main/fontawesome-pro-6.5.2-web/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/all.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-thin.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-solid.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-regular.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-light.css"
+    />
+    <script src="
+            https://cdn.jsdelivr.net/npm/@apollo/client@3.11.8/invariantErrorCodes.min.js
+            "></script>
+    <script src="
+            https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js
+            "></script>
+    <script src="
+            https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
+            "></script>
+    <title>Placeholder's profile - AniMatch</title>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo">
+          <img src="../images/logo.svg" alt="logo" />
+        </div>
+        <nav>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="about.html">Explore</a></li>
+            <li><a href="contact.html">Recommendations</a></li>
+            <li><a href="contact.html" class="active">Profile</a></li>
+          </ul>
+        </nav>
+        <button type="button" id="logout-btn">Logout</button>
+      </header>
+      <main>
+        <div class="banner-container">
+          <div class="banner-img">
+            <img src="../images/home.jpg" alt="banner" />
+          </div>
+        </div>
+        <div class="review-section">
+          <div class="review-top">
+            <h1 id="anime-title">Dragon Ball GT</h1>
+            <p>a review by Vegeta</p>
+          </div>
+          <div class="review-bottom">
+            <p id="review">
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+              Voluptatibus voluptatem vel ipsa quam ducimus fugit velit! Quae
+              atque, quam natus reprehenderit vel sequi cupiditate delectus
+              odit, voluptatibus eum, molestias maxime ad neque repellat numquam
+              obcaecati quos asperiores id minus eius accusantium non hic iste
+              impedit. Alias nesciunt magni tenetur in, itaque id repellendus
+              cum numquam beatae fugiat expedita cumque fugit saepe perspiciatis
+              labore! Voluptas, mollitia asperiores! Rem, autem deleniti sequi
+              unde quisquam reiciendis quod reprehenderit pariatur hic
+              perferendis vel sint ipsam obcaecati doloribus illo. Et
+              repellendus eum accusamus totam aliquam nihil pariatur ipsum
+              consectetur praesentium reiciendis esse debitis officia mollitia
+              velit, magnam voluptatibus officiis, suscipit rem ipsam sint
+              excepturi? Nostrum accusantium dolorem, praesentium, quo id
+              excepturi perspiciatis, consectetur repellendus modi quidem cum
+              atque itaque maiores laudantium eius. Voluptatum voluptas dolores
+              maxime porro quis eveniet atque! Corporis deserunt nemo vel,
+              exercitationem hic quod provident illum repellat libero quos
+              perspiciatis ut atque doloremque asperiores reiciendis facere ab
+              magnam voluptatibus impedit repellendus fuga saepe blanditiis
+              recusandae. Optio provident explicabo consequuntur, nemo tenetur
+              numquam possimus ad laborum? Laborum iusto facilis expedita
+              provident ex rem vitae et earum repudiandae dicta unde quae
+              delectus similique, voluptatem consequatur tenetur ea architecto
+              vero debitis veritatis! Ipsam architecto mollitia soluta
+              repudiandae. Minus, facere reprehenderit, natus porro nobis
+              provident doloribus cupiditate cumque quas corrupti laudantium
+              harum quod ullam amet placeat illo fugiat. Accusamus, magnam
+              recusandae nostrum, aut saepe quo sit quos sed corporis veniam
+              necessitatibus optio facere? Voluptatum, eveniet pariatur eligendi
+              mollitia commodi repellendus quam veritatis dolorum reiciendis
+              modi ab assumenda accusamus voluptates fugiat illo velit tempore.
+              Soluta sapiente rerum aperiam earum, error autem, ea laboriosam
+              officiis, sequi doloremque illo vel tempore ducimus consequuntur
+              magnam provident quia? Omnis repellendus exercitationem fugit qui
+              architecto reprehenderit cum blanditiis deleniti corporis expedita
+              dolor voluptates, porro nulla sapiente, accusantium magnam
+              distinctio. Sequi ratione voluptatum velit? Perferendis possimus
+              nam at quasi nisi maxime accusamus voluptatibus fugiat? Aut
+              tempore ratione, cumque dolores suscipit ducimus fuga! Repellendus
+              officia repellat aperiam perspiciatis, expedita voluptatibus eum
+              ab est earum, sed nobis similique voluptas recusandae accusantium
+              eveniet eligendi odio quia necessitatibus et hic voluptates
+              corporis cumque libero. Ipsam, recusandae voluptatum?
+            </p>
+          </div>
+        </div>
+        <div class="score-container">
+          <div class="score-item">
+            <p id="score">92</p>
+            <span>/100</span>
+          </div>
+        </div>
+      </main>
+    </div>
+    <footer></footer>
+    <script src="../scripts/load-footer.js"></script>
+  </body>
+</html>
