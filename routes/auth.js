@@ -189,5 +189,193 @@ router.get('/logout', (req, res) => {
     });
 });
 
+// Add or update anime status
+router.post("/api/update-list", async (req, res) => {
+    const { animeId, status } = req.body;
+
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: "Unauthorized. Please log in." });
+    }
+
+    const userId = req.session.user.id;
+
+    try {
+        // Insert or update the anime list entry
+        const { data, error } = await supabase
+            .from("ANIME_LIST")
+            .upsert(
+                { user_id: userId, anime_id: animeId, status },
+                { onConflict: ["user_id", "anime_id"] } // Ensure unique user-anime pairs
+            );
+
+        if (error) {
+            console.error("Error updating anime list:", error);
+            return res.status(500).json({ error: "Failed to update anime list." });
+        }
+
+        res.status(200).json({ success: true, data });
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        res.status(500).json({ error: "An unexpected error occurred." });
+    }
+});
+
+
+router.post("/api/toggle-favorite", async (req, res) => {
+    const { animeId } = req.body;
+    console.log("Toggling favorite status for Anime ID:", animeId);
+
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: "Unauthorized. Please log in." });
+    }
+
+    const userId = req.session.user.id;
+
+    if (!animeId) {
+        return res.status(400).json({ error: "Missing anime ID." });
+    }
+
+    try {
+        console.log("Checking if the anime is already in favorites...");
+        const { data: favoriteEntry, error: fetchError } = await supabase
+            .from("FAVORITES")
+            .select("favorite_id")
+            .eq("user_id", userId)
+            .eq("anime_id", animeId)
+            .maybeSingle(); // Safely handle no rows
+
+
+        if (fetchError) {
+            return res.status(500).json({ error: "Failed to toggle favorite status." });
+        }
+
+        if (favoriteEntry) {
+            const { error: deleteError } = await supabase
+                .from("FAVORITES")
+                .delete()
+                .eq("favorite_id", favoriteEntry.favorite_id);
+
+
+            if (deleteError) {
+                return res.status(500).json({ error: "Failed to remove favorite." });
+            }
+
+            return res.status(200).json({ isFavorite: false });
+        } else {
+            const { error: insertError } = await supabase
+                .from("FAVORITES")
+                .insert([{ user_id: userId, anime_id: animeId }]);
+
+
+            if (insertError) {
+                return res.status(500).json({ error: "Failed to add favorite." });
+            }
+
+            return res.status(200).json({ isFavorite: true });
+        }
+    } catch (err) {
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+router.post('/api/update-anime-status', async (req, res) => {
+    const { animeId, status } = req.body;
+
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    }
+
+    const userId = req.session.user.id;
+
+    if (!animeId || !status) {
+        return res.status(400).json({ error: 'Missing anime ID or status.' });
+    }
+
+    try {
+        const { error } = await supabase
+            .from('ANIME_LIST')
+            .update({ status })
+            .eq('user_id', userId)
+            .eq('anime_id', animeId);
+
+        if (error) {
+            console.error('Error updating anime status:', error.message);
+            return res.status(500).json({ error: 'Failed to update anime status.' });
+        }
+
+        res.status(200).json({ message: 'Anime status updated successfully.' });
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+
+router.delete('/api/delete-anime', async (req, res) => {
+    const { animeId } = req.body;
+
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    }
+
+    const userId = req.session.user.id;
+
+    if (!animeId) {
+        return res.status(400).json({ error: 'Missing anime ID.' });
+    }
+
+    try {
+        const { error } = await supabase
+            .from('ANIME_LIST')
+            .delete()
+            .eq('user_id', userId)
+            .eq('anime_id', animeId);
+
+        if (error) {
+            console.error('Error deleting anime:', error);
+            return res.status(500).json({ error: 'Failed to delete anime.' });
+        }
+
+        return res.status(200).json({ message: 'Anime deleted successfully.' });
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+
+router.delete('/api/remove-favorite', async (req, res) => {
+    const { animeId } = req.body;
+
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    }
+
+    const userId = req.session.user.id;
+
+    if (!animeId) {
+        return res.status(400).json({ error: 'Missing anime ID.' });
+    }
+
+    try {
+        const { error } = await supabase
+            .from('FAVORITES') // Replace with your actual table name
+            .delete()
+            .eq('user_id', userId)
+            .eq('anime_id', animeId);
+
+        if (error) {
+            console.error('Error removing favorite:', error);
+            return res.status(500).json({ error: 'Failed to remove favorite.' });
+        }
+
+        return res.status(200).json({ message: 'Favorite removed successfully.' });
+    } catch (err) {
+        console.error('Unexpected error removing favorite:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+
 
 module.exports = router;

@@ -144,6 +144,22 @@ main {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
+#logout-btn {
+  background: var(--light-main-color);
+  border: none;
+  color: white;
+  font-family: var(--secondary-font);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.3s ease;
+  padding: 10px 20px;
+  border-radius: 4px;
+}
+
+#logout-btn:hover {
+  background: var(--main-color);
+}
+
 .overlay-top-bottom {
   position: absolute;
   width: 100%;

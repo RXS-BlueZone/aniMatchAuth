@@ -1,68 +1,90 @@
 const API_URL = "https://graphql.anilist.co";
-let currentPage = 1; // Track the current page for infinite scroll
-let isFetching = false; // Prevent simultaneous fetches
-let sortType = null; // Track the selected sort type
-
-// Track Filter Selections
+let currentPage = 1;
+let isFetching = false;
+let sortType = null;
 let filters = {
   genre: null,
   year: null,
   season: null,
   format: null,
+  status: null,
 };
+
+// cahcing
+const cache = {};
+
+async function fetchWithCache(query, variables) {
+  const cacheKey = JSON.stringify({ query, variables });
+
+  if (cache[cacheKey]) {
+    console.log("Returning cached data for:", cacheKey);
+    return cache[cacheKey];
+  }
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Network response was not ok (${response.status}): ${errorText}`
+      );
+    }
+    const data = await response.json();
+    cache[cacheKey] = data;
+    return data;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error;
+  }
+}
 
 // ** DOM Elements **
 const sortDropdown = document.getElementById("sort-dropdown");
 const sortedResultsSection = document.getElementById("sorted-results");
 const searchBar = document.getElementById("search-bar");
 const sortedGrid = document.getElementById("sorted-grid");
+const trendingGrid = document.getElementById("trending-grid");
+const popularSeasonGrid = document.getElementById("popular-season-grid");
+const upcomingSeasonGrid = document.getElementById("upcoming-season-grid");
+const allTimePopularGrid = document.getElementById("all-time-popular-grid");
+const top10Grid = document.getElementById("top-10-grid");
 
-// ** Hide Sort Dropdown (default) **
-const hideSortDropdown = () => {
-  sortDropdown.hidden = true;
-};
+// ** hide sort dropdown (default) **
+const hideSortDropdown = () => (sortDropdown.hidden = true);
+// ** show sort dropdown (when triggered) **
+const showSortDropdown = () => (sortDropdown.hidden = false);
 
-// ** Show Sort Dropdown (when triggered) **
-const showSortDropdown = () => {
-  sortDropdown.hidden = false;
-};
-
-// ** Fetch and Populate Genres **
+// ** get genres and populate dropdown **
 const fetchGenres = async () => {
-  const query = `
-    query {
-      GenreCollection
-    }
-  `;
-
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  });
-
-  const data = await response.json();
-  populateDropdown("genre-filter", data.data.GenreCollection, "Genres");
+  const query = `query {GenreCollection}`;
+  try {
+    const data = await fetchWithCache(query, {});
+    populateDropdown("genre-filter", data.data.GenreCollection, "Genres");
+  } catch (error) {
+    console.error("Error fetching genres:", error);
+    // Handle error appropriately (e.g., display a message to the user)
+  }
 };
 
-
-// ** Generate and Populate Years **
+// ** for populating years **
 const fetchYears = () => {
   const currentYear = new Date().getFullYear();
-  const startYear = 1960; // Start from the year anime became widely produced
-  const years = [];
-
-  for (let year = currentYear; year >= startYear; year--) {
-    years.push(year);
-  }
-
+  const startYear = 1960;
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, i) => currentYear - i
+  );
   populateDropdown("year-filter", years, "Year");
 };
 
-// ** Populate Dropdowns Helper **
+// ** function to populaye dropdowns **
 function populateDropdown(dropdownId, items, defaultOption) {
   const dropdown = document.getElementById(dropdownId);
-  dropdown.innerHTML = `<option value="">${defaultOption}</option>`; // Default option
+  dropdown.innerHTML = `<option value="">${defaultOption}</option>`;
   items.forEach((item) => {
     const option = document.createElement("option");
     option.value = item;
@@ -71,41 +93,27 @@ function populateDropdown(dropdownId, items, defaultOption) {
   });
 }
 
+// ** fetch default sections **
+const fetchTrendingAnime = async () =>
+  await fetchAnime("trending-grid", { sort: ["TRENDING_DESC"] }, 5);
+const fetchPopularThisSeason = async () =>
+  await fetchAnime(
+    "popular-season-grid",
+    { sort: ["POPULARITY_DESC"], season: "FALL", seasonYear: 2024 },
+    5
+  );
+const fetchUpcomingNextSeason = async () =>
+  await fetchAnime(
+    "upcoming-season-grid",
+    { sort: ["POPULARITY_DESC"], season: "WINTER", seasonYear: 2025 },
+    5
+  );
+const fetchAllTimePopular = async () =>
+  await fetchAnime("all-time-popular-grid", { sort: ["POPULARITY_DESC"] }, 5);
+const fetchTop10 = async () =>
+  await fetchAnime("top-10-grid", { sort: ["SCORE_DESC"] }, 10, true);
 
-// ** Populate Dropdowns Helper **
-function populateDropdown(dropdownId, items, defaultOption) {
-  const dropdown = document.getElementById(dropdownId);
-  dropdown.innerHTML = `<option value="">${defaultOption}</option>`; // Default option
-  items.forEach((item) => {
-    const option = document.createElement("option");
-    option.value = item;
-    option.textContent = item;
-    dropdown.appendChild(option);
-  });
-}
-
-// ** Fetch Default Sections **
-const fetchTrendingAnime = async () => {
-  fetchAnime("trending-grid", { sort: ["TRENDING_DESC"] }, 5);
-};
-
-const fetchPopularThisSeason = async () => {
-  fetchAnime("popular-season-grid", { sort: ["POPULARITY_DESC"], season: "FALL", seasonYear: 2024 }, 5);
-};
-
-const fetchUpcomingNextSeason = async () => {
-  fetchAnime("upcoming-season-grid", { sort: ["POPULARITY_DESC"], season: "WINTER", seasonYear: 2025 }, 5);
-};
-
-const fetchAllTimePopular = async () => {
-  fetchAnime("all-time-popular-grid", { sort: ["POPULARITY_DESC"] }, 5);
-};
-
-const fetchTop10 = async () => {
-  fetchAnime("top-10-grid", { sort: ["SCORE_DESC"] }, 10, true);
-};
-
-// ** Fetch Anime Generic Function **
+// ** fetch anime (overall) **
 async function fetchAnime(gridId, params, perPage, isTop10 = false) {
   const { sort, season, seasonYear, genre, format, status } = params;
   const query = `
@@ -115,6 +123,8 @@ async function fetchAnime(gridId, params, perPage, isTop10 = false) {
           id
           title {
             romaji
+            english
+            native
           }
           coverImage {
             large
@@ -133,69 +143,76 @@ async function fetchAnime(gridId, params, perPage, isTop10 = false) {
   `;
 
   const variables = {
-    page: currentPage, // Use the current page for pagination
+    page: currentPage,
     perPage,
     sort,
     season: season || undefined,
     seasonYear: seasonYear || undefined,
     genre: genre || undefined,
     format: format || undefined,
-    status: status || undefined
+    status: status || undefined,
   };
 
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-  });
-
-  const data = await response.json();
-  if (isTop10) {
-    renderTop10(data.data.Page.media);
-  } else {
-    appendAnime(data.data.Page.media, gridId); // Use appendAnime instead of renderAnime
+  try {
+    const data = await fetchWithCache(query, variables);
+    const animeList = data.data.Page.media;
+    if (isTop10) {
+      renderTop10(animeList, top10Grid);
+    } else {
+      renderAnime(animeList, gridId);
+    }
+  } catch (error) {
+    console.error("Error fetching anime:", error);
+    // display an error message to the user
   }
 }
-
 
 // ** Rendering Functions **
 const renderAnime = (animeList, gridId) => {
   const grid = document.getElementById(gridId);
-  grid.innerHTML = ""; // Clear existing content
-
+  grid.innerHTML = ""; // clear existing content
   animeList.forEach((anime) => {
-    const animeCard = document.createElement("div");
-    animeCard.className = "anime-card";
-    animeCard.innerHTML = `
-      <a href="/anime-details?id=${anime.id}" class="anime-link" style="text-decoration: none; color: #161616">
-        <img src="${anime.coverImage.large}" alt="${anime.title.romaji}">
-        <h3>${anime.title.romaji}</h3>
-      </a>
-    `;
+    const animeCard = createAnimeCard(anime);
     grid.appendChild(animeCard);
   });
 };
 
+const createAnimeCard = (anime) => {
+  const animeCard = document.createElement("div");
+  animeCard.className = "anime-card";
+  const coverImage =
+    anime.coverImage?.large || "https://via.placeholder.com/150";
+  const title = anime.title?.english || anime.title?.romaji || anime.title?.native || "No Title Available";
+  animeCard.innerHTML = `
+      <a href="/anime-details?id=${anime.id}" class="anime-link" style="text-decoration: none; color: #161616;">
+        <img src="${coverImage}" alt="${title}">
+        <h3>${title}</h3>
+      </a>
+    `;
+  return animeCard;
+};
 
-const renderTop10 = (animeList) => {
-  const grid = document.getElementById("top-10-grid");
-  grid.innerHTML = ""; // Clear existing content
-
+const renderTop10 = (animeList, grid) => {
+  grid.innerHTML = "";
   animeList.forEach((anime, index) => {
     const card = document.createElement("div");
     card.className = "top-10-card";
-    const genresHTML = anime.genres.map((genre) => `<span>${genre.toLowerCase()}</span>`).join("");
+    const genresHTML = anime.genres
+      .map((genre) => `<span>${genre.toLowerCase()}</span>`)
+      .join("");
     card.innerHTML = `
-      <img src="${anime.coverImage.large}" alt="${anime.title.romaji}">
+      <img src="${anime.coverImage.large}" alt="${anime.title.english || anime.title.romaji || anime.title.native || 'image'}">
       <div class="top-10-content">
-        <h3>#${index + 1} ${anime.title.romaji}</h3>
+        <h3>#${index + 1} ${anime.title.english || anime.title.romaji || anime.title.native || 'No Title Available'}</h3>
         <div class="tags">${genresHTML}</div>
       </div>
       <div class="top-10-stats">
         <div class="score">⭐ ${anime.averageScore}%</div>
         <div class="info">
           ${anime.format} • ${anime.episodes || "?"} episodes<br>
-          ${anime.season || ""} ${anime.seasonYear || ""} • ${anime.status || "Unknown"}
+          ${anime.season || ""} ${anime.seasonYear || ""} • ${
+      anime.status || "Unknown"
+    }
         </div>
       </div>
     `;
@@ -203,7 +220,7 @@ const renderTop10 = (animeList) => {
   });
 };
 
-// ** Event Listeners for Filters and Sorts **
+// ** event listeners for filters and sorts **
 document.getElementById("genre-filter").addEventListener("change", (event) => {
   filters.genre = event.target.value || null;
   updateFiltersAndFetch();
@@ -226,52 +243,44 @@ document.getElementById("status-filter").addEventListener("change", (event) => {
   updateFiltersAndFetch();
 });
 
-// Event listener for sort options
+// event listener for sort options
 document.querySelectorAll(".sort-menu a").forEach((option) => {
-  option.addEventListener("click", (event) => {
-    event.preventDefault(); // Prevent default link behavior
-
+  option.addEventListener("click", async (event) => {
+    event.preventDefault();
     const sortType = event.target.dataset.sort;
-
     if (sortType === "DEFAULT") {
-      // If "Default" is selected, reset the page to the default sections
-      resetToDefault(); // This will reset the page to the initial state
+      resetToDefault();
+      hideClearFiltersButton();
     } else {
-      // Apply sorting based on the selected sort type
-      sortType = sortType || "TRENDING_DESC"; // Default to "TRENDING_DESC" if no sort type
-      updateViewAllResults(sortType, filters.season, filters.year);
+      await updateViewAllResults(sortType, filters.season, filters.year);
+      showClearFiltersButton();
     }
   });
 });
 
-// ** Search Event Listener **
-// Add event listener for the search bar
-// Add event listener for the search bar
-searchBar.addEventListener("input", (event) => {
+// ** search event listener **
+searchBar.addEventListener("input", async (event) => {
   const searchQuery = event.target.value.trim();
-
   if (searchQuery) {
-    // If there's a search query, show the sort dropdown and clear filters button
     showSortDropdown();
     showClearFiltersButton();
-    fetchSearchResults(searchQuery); // Fetch search results with the current query
+    await fetchSearchResults(searchQuery);
   } else {
-    // If the search bar is cleared, reset filters and hide the clear button
-    clearFilters(); // Reset to default sections and hide the clear filters button
+    clearFilters();
   }
 });
 
-
-
-// ** Fetch Search Results with Filters and Sort **
+// ** fetch search results using filters and sort **
 const fetchSearchResults = async (searchQuery) => {
   const query = `
-    query ($search: String, $page: Int, $sort: [MediaSort], $genre: String, $season: MediaSeason, $seasonYear: Int, $format: MediaFormat, $status: MediaStatus) 
-     {
+    query ($search: String, $page: Int, $sort: [MediaSort], $genre: String, $season: MediaSeason, $seasonYear: Int, $format: MediaFormat, $status: MediaStatus) {
+      Page(page: $page) {
         media(search: $search, type: ANIME, sort: $sort, genre: $genre, season: $season, seasonYear: $seasonYear, format: $format, status: $status) {
           id
           title {
             romaji
+            english
+            native
           }
           coverImage {
             large
@@ -289,47 +298,31 @@ const fetchSearchResults = async (searchQuery) => {
     }
   `;
 
-  // Prepare variables, ensuring no unnecessary null values are passed
   const variables = {
     search: searchQuery,
     page: 1,
-    sort: sortType ? [sortType] : ["TRENDING_DESC"], // Default to TRENDING_DESC if no sortType
-    genre: filters.genre || undefined, // Only include if set
-    season: filters.season || undefined, // Only include if set
-    seasonYear: filters.year || undefined, // Only include if set
-    format: filters.format || undefined, // Only include if set
-    status: filters.status || undefined, // Only include if set
+    sort: sortType ? [sortType] : ["TRENDING_DESC"],
+    genre: filters.genre || undefined,
+    season: filters.season || undefined,
+    seasonYear: filters.year || undefined,
+    format: filters.format || undefined,
+    status: filters.status || undefined,
   };
 
   showClearFiltersButton();
 
-  // Debugging: Log variables being sent to the API
-  console.log("Search Query Variables:", variables);
-
   try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables }),
-    });
-
-    const data = await response.json();
-
-    // Debugging: Log the API response
-    console.log("API Response:", data);
-
+    const data = await fetchWithCache(query, variables);
     if (data.errors) {
       console.error("API Errors:", data.errors);
       sortedGrid.innerHTML = `<p>Error fetching search results. Please try again.</p>`;
       return;
     }
-
     const animeList = data.data.Page.media;
     if (!animeList || animeList.length === 0) {
       sortedGrid.innerHTML = `<p>No results found for the current search and filters.</p>`;
       return;
     }
-
     renderSearchResults(animeList);
   } catch (error) {
     console.error("Fetch Error:", error);
@@ -337,38 +330,18 @@ const fetchSearchResults = async (searchQuery) => {
   }
 };
 
-// ** Render Search Results with Updated Filters and Sort **
+// ** display search results with updated filters and sort **
 const renderSearchResults = (animeList) => {
-  sortedGrid.innerHTML = ""; // Clear existing search results
-  sortedResultsSection.style.display = "block"; // Show search results section
-  hideAllDefaultSections(); // Hide default sections
-
-  if (!animeList || animeList.length === 0) {
-    sortedGrid.innerHTML = `<p>No results found for the current search and filters.</p>`;
-    return;
-  }
-
+  sortedGrid.innerHTML = "";
+  sortedResultsSection.style.display = "block";
+  hideAllDefaultSections();
   animeList.forEach((anime) => {
-    const animeCard = document.createElement("div");
-    animeCard.className = "anime-card";
-
-    // Validate image and title properties
-    const coverImage = anime.coverImage?.large || "https://via.placeholder.com/150"; // Placeholder for missing images
-    const title = anime.title?.romaji || "No Title Available";
-
-    animeCard.innerHTML = `
-      <a href="/anime-details?id=${anime.id}" class="anime-link" style="text-decoration: none; color: #161616;">
-        <img src="${coverImage}" alt="${title}">
-        <h3>${title}</h3>
-      </a>
-    `;
-
+    const animeCard = createAnimeCard(anime);
     sortedGrid.appendChild(animeCard);
   });
 };
 
-
-// ** Hide All Default Sections **
+// ** to hide all default sections **
 const hideAllDefaultSections = () => {
   document.getElementById("trending-section").style.display = "none";
   document.getElementById("popular-season-section").style.display = "none";
@@ -377,135 +350,123 @@ const hideAllDefaultSections = () => {
   document.getElementById("top-10-section").style.display = "none";
 };
 
-// ** Reset to Default Sections **
-// Reset to Default Sections
+// ** reset to default sections **
 const resetToDefault = () => {
-  filters = { genre: null, year: null, season: null, format: null, status: null };
+  filters = {
+    genre: null,
+    year: null,
+    season: null,
+    format: null,
+    status: null,
+  };
   sortType = null;
-  sortedResultsSection.style.display = "none"; // Hide the sorted results section
-  hideSortDropdown(); // Hide the sort dropdown
-  showDefaultSections(); // Show the default sections
+  sortedResultsSection.style.display = "none";
+  hideSortDropdown();
+  showDefaultSections();
 };
 
-
-// ** Show Default Sections **
-const showDefaultSections = () => {
+// ** show sections as default page**
+const showDefaultSections = async () => {
   document.getElementById("trending-section").style.display = "block";
   document.getElementById("popular-season-section").style.display = "block";
   document.getElementById("upcoming-season-section").style.display = "block";
   document.getElementById("all-time-popular-section").style.display = "block";
   document.getElementById("top-10-section").style.display = "block";
-  fetchTrendingAnime();
-  fetchPopularThisSeason();
-  fetchUpcomingNextSeason();
-  fetchAllTimePopular();
-  fetchTop10();
+  await fetchTrendingAnime();
+  await fetchPopularThisSeason();
+  await fetchUpcomingNextSeason();
+  await fetchAllTimePopular();
+  await fetchTop10();
 };
 
-// ** Update Filters and Fetch Anime **
-const updateFiltersAndFetch = () => {
+// ** update filters and fetch anime **
+const updateFiltersAndFetch = async () => {
   const searchQuery = searchBar.value.trim();
   if (searchQuery) {
-    fetchSearchResults(searchQuery); // Apply filters and sort to search
+    await fetchSearchResults(searchQuery);
   } else {
-    fetchAnime("sorted-grid", { ...filters, sort: [sortType] }, 10); // Apply filters and sort to default grid
+    await fetchAnime("sorted-grid", { ...filters, sort: [sortType] }, 10);
   }
 };
 
-// ** Page Initialization **
-document.addEventListener("DOMContentLoaded", () => {
-  hideSortDropdown(); // Ensure sort dropdown is hidden on load
-  fetchGenres();
+// ** Initializate page content **
+document.addEventListener("DOMContentLoaded", async () => {
+  hideSortDropdown();
+  await fetchGenres();
   fetchYears();
-  showDefaultSections();
+  await showDefaultSections();
 });
 
-
-// Add event listeners to "View All" links
+// event listeners to view all
 document.querySelectorAll(".view-all").forEach((viewAllLink) => {
-  viewAllLink.addEventListener("click", (event) => {
-    event.preventDefault(); // Prevent default link behavior
-
-    // Get the sort type, season, and year from data attributes
+  viewAllLink.addEventListener("click", async (event) => {
+    event.preventDefault();
     const sortType = viewAllLink.getAttribute("data-sort");
     const season = viewAllLink.getAttribute("data-season") || null;
     const seasonYear = parseInt(viewAllLink.getAttribute("data-year")) || null;
-
-    // Call the updateViewAllResults function with these values
-    updateViewAllResults(sortType, season, seasonYear);
+    await updateViewAllResults(sortType, season, seasonYear);
     showSortDropdown();
   });
 });
 
-const updateViewAllResults = (sortType, season = null, seasonYear = null) => {
-  // Reset filters
-  filters = { genre: null, year: null, season: null, format: null, status: null };
-
-  // Set the appropriate filters for season and year if provided
+const updateViewAllResults = async (
+  sortType,
+  season = null,
+  seasonYear = null
+) => {
+  filters = {
+    genre: null,
+    year: null,
+    season: null,
+    format: null,
+    status: null,
+  };
   if (season) filters.season = season;
   if (seasonYear) filters.year = seasonYear;
-
-  // Show the sorted results section and hide default sections
   sortedResultsSection.style.display = "block";
   hideAllDefaultSections();
-
-  // Fetch results with the selected sort type and filters
-  fetchAnime("sorted-grid", { ...filters, sort: [sortType] }, 20);
-
-  // Show sort dropdown after results are shown
+  await fetchAnime("sorted-grid", { ...filters, sort: [sortType] }, 20);
   showSortDropdown();
-
-  // Show the Clear Filters button after applying filters or sorting
   showClearFiltersButton();
 };
 
+// show the clear filter
+const showClearFiltersButton = () =>
+  (document.getElementById("clear-filters-btn").hidden = false);
+// hide the clear filter
+const hideClearFiltersButton = () =>
+  (document.getElementById("clear-filters-btn").hidden = true);
 
-
-// Show the Clear Filters button
-const showClearFiltersButton = () => {
-  document.getElementById("clear-filters-btn").hidden = false;
-};
-
-// Hide the Clear Filters button
-const hideClearFiltersButton = () => {
-  document.getElementById("clear-filters-btn").hidden = true;
-};
-
-// Clear all filters and reset the page
-// Clear Filters Function
+// clear filters function
 const clearFilters = () => {
-  filters = { genre: null, year: null, season: null, format: null };
+  filters = {
+    genre: null,
+    year: null,
+    season: null,
+    format: null,
+    status: null,
+  };
   sortType = null;
-
-  // Clear the search bar input
   searchBar.value = "";
-
-  // Reset the sort dropdown and hide it
   hideSortDropdown();
-
-  // Reset the page to the default sections
   resetToDefault();
-
-  // Hide the clear filters button once everything is cleared
   hideClearFiltersButton();
 };
 
+document
+  .getElementById("clear-filters-btn")
+  .addEventListener("click", clearFilters);
 
-// Bind the Clear Filters button to the function
-document.getElementById("clear-filters-btn").addEventListener("click", () => {
-  clearFilters();
-});
-
-// Event listener for sorting
+// event listener for sorting 
 document.querySelectorAll(".sort-menu a").forEach((option) => {
-  option.addEventListener("click", (event) => {
+  option.addEventListener("click", async (event) => {
     event.preventDefault();
     const sortType = event.target.dataset.sort;
     if (sortType === "DEFAULT") {
       resetToDefault();
       hideClearFiltersButton();
     } else {
-      updateViewAllResults(sortType, filters.season, filters.year);
+      await updateViewAllResults(sortType, filters.season, filters.year);
       showClearFiltersButton();
     }
   });

@@ -154,6 +154,22 @@ main {
   color: var(--light-main-color) !important;
 }
 
+#logout-btn {
+  background: var(--light-main-color);
+  border: none;
+  color: white;
+  font-family: var(--secondary-font);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.3s ease;
+  padding: 10px 20px;
+  border-radius: 4px;
+}
+
+#logout-btn:hover {
+  background: rgb(64, 19, 142);
+}
+
 .banner {
   margin-top: -55px;
   position: relative;
@@ -436,6 +452,12 @@ main {
   font-size: 0.875rem;
   color: rgb(var(--color-text));
   cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: 0.2s ease;
 }
 
@@ -820,7 +842,6 @@ main {
   -webkit-box-orient: vertical;
   cursor: pointer;
   transition: 0.2s ease;
-  text-decoration: none;
 }
 
 .recommendation-title:hover {
@@ -845,7 +866,6 @@ main {
   justify-content: center;
   gap: 10px;
   margin-right: -20px;
-  text-decoration: none;
 }
 
 .recommendation-links a {
@@ -856,14 +876,7 @@ main {
   color: rgb(var(--color-text));
   font-weight: 600;
   cursor: pointer;
-  text-decoration: none;
 }
-
-p.recommendation-link p.recommendation-title {
-  /* color: #0078d7;  */
-  text-decoration: none;
-}
-
 
 .tags-wrapper {
   display: flex;
@@ -1006,6 +1019,10 @@ p.recommendation-link p.recommendation-title {
   color: white !important;
 }
 
+.red-heart {
+  color: #ff6e6e; /* Adjust to your desired red color */
+}
+
 #characters-section {
   position: relative;
   width: 100%;
@@ -1067,3 +1084,71 @@ p.recommendation-link p.recommendation-title {
   background: var(--dark-color);
 }
 
+.edit-anime-status {
+  position: absolute;
+  width: 180px;
+  top: calc(100% + 10px);
+  right: 50%;
+  transform: translateX(50%);
+  background: white;
+  color: rgb(var(--color-text));
+  font-size: var(--text-tiny-font-size);
+  padding: 5px 15px;
+  border-radius: 4px;
+  box-shadow: 0 2px 30px rgba(var(--color-shadow-dark), 0.3);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.edit-anime-status button {
+  width: 100%;
+  border: none;
+  background: none;
+  color: rgb(var(--color-text-lighter));
+  font-size: var(--text-tiny-font-size);
+  font-family: var(--primary-font);
+  font-weight: 500;
+  padding: 0 20px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  padding: 5px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.edit-anime-status button:hover {
+  color: var(--secondary-color) !important;
+}
+
+.edit-anime-status button span {
+  display: none;
+  color: var(--secondary-color);
+}
+
+.active-status,
+.active-edit {
+  color: var(--secondary-color) !important;
+}
+
+.list-options-wrapper {
+  position: relative;
+}
+
+.list-options-wrapper::after {
+  content: "";
+  position: absolute;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid white;
+  top: 100%;
+  right: 100%;
+  transform: translate(calc(100% + 10px), 0%);
+  z-index: 1;
+}
+
+.show-status {
+  display: flex;
+}

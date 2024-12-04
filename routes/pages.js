@@ -98,14 +98,23 @@ router.get('/onboarding', isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'onboarding.html'));
 });
 
+router.get('/addReview', isAuthenticated, (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'add-review.html'));
+});
+
 // Public routes
 router.get('/explore', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'explore.html'));
 });
 
 router.get('/anime-details', (req, res) => {
+    const animeId = req.query.id; // Retrieve the "id" query parameter
+    if (!animeId) {
+        return res.status(400).send("Anime ID is required");
+    }
     res.sendFile(path.join(__dirname, '../public', 'anime-details.html'));
 });
+
 
 // API to fetch recommendations based on user's genre preferences
 router.get('/api/recommendations', async (req, res) => {
@@ -139,5 +148,133 @@ router.get('/api/recommendations', async (req, res) => {
 router.get('/prompt', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'signup-prompt.html'));
 });
+
+router.get("/api/favorite-status", async (req, res) => {
+    const animeId = req.query.id;
+    console.log("Fetching favorite status for Anime ID:", animeId);
+
+    if (!req.session || !req.session.user) {
+        console.error("Unauthorized access attempt");
+        return res.status(401).json({ error: "Unauthorized. Please log in." });
+    }
+
+    const userId = req.session.user.id;
+
+    if (!animeId) {
+        console.error("Anime ID is missing in the request");
+        return res.status(400).json({ error: "Missing anime ID." });
+    }
+
+    try {
+        const { data: favoriteEntry, error } = await supabase
+            .from("FAVORITES")
+            .select("favorite_id")
+            .eq("user_id", userId)
+            .eq("anime_id", animeId)
+            .single();
+
+        console.log("Favorite Entry:", favoriteEntry); // Log favorite entry
+        if (error && error.details !== "Row not found") {
+            console.error("Error checking favorite status:", error);
+            return res.status(500).json({ error: "Failed to fetch favorite status." });
+        }
+
+        return res.status(200).json({ isFavorite: !!favoriteEntry });
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+
+
+router.get("/api/anime-status", async (req, res) => {
+    const animeId = req.query.id;
+
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: "Unauthorized. Please log in." });
+    }
+
+    const userId = req.session.user.id;
+
+    if (!animeId) {
+        return res.status(400).json({ error: "Missing anime ID." });
+    }
+
+    try {
+        // Check the current status of the anime in the database
+        const { data: animeEntry, error } = await supabase
+            .from("ANIME_LIST")
+            .select("status")
+            .eq("user_id", userId)
+            .eq("anime_id", animeId)
+            .single();
+
+        if (error && error.details !== "Row not found") {
+            console.error("Error fetching anime status:", error);
+            return res.status(500).json({ error: "Failed to fetch anime status." });
+        }
+
+        // Return the status or null if not found
+        return res.status(200).json({ status: animeEntry ? animeEntry.status : null });
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+// Backend route to fetch anime list for the user
+router.get("/api/anime-list", async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: "Unauthorized. Please log in." });
+    }
+
+    const userId = req.session.user.id;
+
+    try {
+        const { data: animeList, error } = await supabase
+            .from("ANIME_LIST")
+            .select("anime_id, status") // Fetch anime ID and status
+            .eq("user_id", userId);
+
+        if (error) {
+            console.error("Error fetching anime list:", error);
+            return res.status(500).json({ error: "Failed to fetch anime list." });
+        }
+
+        res.status(200).json({ animeList });
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        res.status(500).json({ error: "Internal server error." });
+    }
+});
+
+router.get('/api/favorites', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    }
+
+    const userId = req.session.user.id;
+
+    try {
+        // Query the favorites table
+        const { data: favorites, error } = await supabase
+            .from('FAVORITES') // Replace with your actual table name
+            .select('anime_id')
+            .eq('user_id', userId);
+
+        if (error) {
+            console.error('Error fetching favorites:', error);
+            return res.status(500).json({ error: 'Failed to fetch favorites.' });
+        }
+
+        return res.status(200).json({ favorites });
+    } catch (err) {
+        console.error('Unexpected error fetching favorites:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+
 
 module.exports = router;

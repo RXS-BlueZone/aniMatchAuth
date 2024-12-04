@@ -60,6 +60,7 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
             <li><a href="/profile">Profile</a></li>
           </ul>
         </nav>
+        <button type="button" id="logout-btn">Logout</button>
       </header>
       <main>
         <div class="overlay-top-bottom"></div>
@@ -98,7 +99,7 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
           <h4>Freshly Animated</h4>
           <h2>New Releases</h2>
         </div>
-        <a href="#"
+        <a href="/explore"
           >See More &nbsp;&nbsp;<i class="fa-regular fa-arrow-right"></i
         ></a>
       </div>
@@ -110,7 +111,10 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
         <h4>Review Movies</h4>
         <h2>We Provide The Largest Anime<br />Movies Database.</h2>
       </div>
-      <button class="see-more">
+      <button class="see-more" onclick="window.location.href='/explore'">
+        See More
+      </button>
+      
         View Movies &nbsp;&nbsp; <i class="fa-light fa-arrow-right"></i>
       </button>
     </div>

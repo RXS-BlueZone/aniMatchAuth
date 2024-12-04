@@ -1,27 +1,32 @@
 document.addEventListener("DOMContentLoaded", () => {
     // ---------------------------------------------------------------- ONBOARDING -----------------------------------------------------------------
 
-    const genreList = []; // Stores selected genres
+    const genreList = []; // list for selected genres
 
     // Onboarding completion check
     function checkOnboardingCompletion() {
         const currentPath = window.location.pathname;
 
-        // Skip redirection if the user is already on the onboarding page
+        // skip redirection if the user is already on the onboarding page
         if (currentPath === "/onboarding") {
-            fetchGenres(); // Fetch genres to display for user
-            updateButtonState(); // Initialize button state
+            fetchGenres(); // get genres to display for user
+            updateButtonState(); 
+
+            // Add Cancel button if the user came from recommendations
+            if (document.referrer.includes("/recommendations")) {
+                addCancelButton();
+            }
             return;
         }
 
-        fetch("/api/session") // Backend endpoint to check session and onboarding status
+        fetch("/api/session") // endpoint to check session and onboarding status
             .then((response) => response.json())
             .then((data) => {
                 if (data.loggedIn && data.genresCompleted) {
-                    // Redirect to the homepage if onboarding is already complete
+                    // goto the homepage if onboarding is already complete
                     window.location.href = "/index";
                 } else {
-                    // Allow user to continue with onboarding
+                    // if not, allow user to continue with onboarding
                     fetchGenres();
                     updateButtonState();
                 }
@@ -32,7 +37,21 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // Update the button state based on the number of selected genres
+    // cancel button for users coming from recommendations
+    function addCancelButton() {
+        const cancelButton = document.createElement("button");
+        cancelButton.id = "cancel";
+        cancelButton.innerText = "Cancel";
+        cancelButton.onclick = function () {
+            window.location.href = "/recommendations";
+        };
+
+        // join button to the onboarding page
+        const buttonContainer = document.getElementById("button-container"); 
+        buttonContainer.appendChild(cancelButton);
+    }
+
+    // update the button state based on the number of selected genres
     function updateButtonState() {
         const doneButton = document.getElementById("done");
         if (genreList.length < 3) {
@@ -44,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Fetch genres from AniList API
+    // getgenres from AniList
     function fetchGenres() {
         $.ajax({
             url: "https://graphql.anilist.co",
@@ -60,13 +79,13 @@ document.addEventListener("DOMContentLoaded", () => {
             success: function (result) {
                 const genres = result.data.GenreCollection;
                 const container = document.getElementById("genre-list");
-                container.innerHTML = ""; // Clear the genre list container
+                container.innerHTML = ""; // clear the genre list container
                 genres.forEach((genre) => {
                     const genreCard = document.createElement("div");
                     genreCard.className = "genre-card";
                     genreCard.innerText = genre;
 
-                    // Toggle selection on click
+                    // toggle selection on click
                     genreCard.onclick = function () {
                         genreCard.classList.toggle("selected");
                         if (genreList.includes(genre)) {
@@ -86,17 +105,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Handle the "Done" button click
+    // "Done" button click
     document.getElementById("done").onclick = function () {
         if (genreList.length >= 3) {
-            // Save the selected genres via the backend
+            // save the selected genres in the backend
             $.ajax({
-                url: "/api/save-genres", // Backend endpoint for saving genres
+                url: "/api/save-genres", 
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({ genres: genreList }),
                 success: function () {
-                    // Redirect to recommendations page after successfully saving genres
+                    // backto recommendations page after successful change
                     const referrer = document.referrer;
                     if (referrer.includes("/recommendations")) {
                         window.location.href = "/recommendations";
@@ -114,6 +133,5 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // Run onboarding completion check on page load
     checkOnboardingCompletion();
 });

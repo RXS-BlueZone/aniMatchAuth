@@ -5,16 +5,14 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAnimeDataBatch();
 });
 
-// Global variables
 const floatingTextList = [];
-const CACHE_TTL = 600000; // Cache Time-to-Live in milliseconds (10 minutes)
+const CACHE_TTL = 600000; // Cache Time-to-Live (10 minutes)
 const CACHE_KEYS = {
     trending: "cacheTrendingAnimes",
     newReleases: "cacheNewReleases",
     topRated: "cacheTopRatedMovies",
 };
 
-// Authentication handling
 function initializeAuth() {
     const authLink = document.getElementById("auth-link");
     const userMessage = document.getElementById("user-message");
@@ -46,7 +44,7 @@ function initializeAuth() {
         });
 }
 
-// Fetch anime data in a single batch request
+// get anime data in a single batch request to lessen queries
 function fetchAnimeDataBatch() {
     const cachedTrending = checkCache(CACHE_KEYS.trending);
     const cachedNewReleases = checkCache(CACHE_KEYS.newReleases);
@@ -56,7 +54,7 @@ function fetchAnimeDataBatch() {
         displayAnimeData(cachedTrending, "anime-list");
         displayAnimeData(cachedNewReleases, "new-releases-list");
         displayAnimeData(cachedTopRated, "top-rated-movies");
-        initializeCarousel(); // Reinitialize carousel even with cached data
+        initializeCarousel(); // reinitialize carousel even with cached data
         return;
     }
 
@@ -124,19 +122,19 @@ function fetchAnimeDataBatch() {
             displayAnimeData(data.data.newReleases.media, "new-releases-list");
             displayAnimeData(data.data.topRated.media, "top-rated-movies");
 
-            initializeCarousel(); // Reinitialize carousel after fetching data
+            initializeCarousel(); 
         })
         .catch((error) => console.error("Error fetching anime data:", error));
 }
 
-// Display anime data
+// show anime data
 function displayAnimeData(animeList, containerId) {
     const container = document.getElementById(containerId);
     container.innerHTML = "";
 
     animeList.forEach((anime) => {
         const title = anime.title.english || anime.title.romaji || anime.title.native || "No Title Available";
-        const isTopRated = containerId === "top-rated-movies"; // Check if this is the top-rated movies container
+        const isTopRated = containerId === "top-rated-movies"; 
         const animeItem = document.createElement("div");
         animeItem.className = "anime-item";
         animeItem.innerHTML = `
@@ -153,7 +151,7 @@ function displayAnimeData(animeList, containerId) {
 }
 
 
-// Initialize carousel for top-rated movies
+// carousel for top-rated movies
 function initializeCarousel() {
     const track = document.querySelector(".carousel-track");
     const nextButton = document.querySelector(".carousel-control.next");
@@ -163,7 +161,7 @@ function initializeCarousel() {
     const updateCarousel = () => {
         const itemWidth = track.querySelector(".anime-item").offsetWidth + 30; // Include gap
         const visibleItems = Math.floor(track.offsetWidth / itemWidth);
-        const totalItems = Math.min(track.children.length, 11); // Ensure a maximum of 15 items
+        const totalItems = Math.min(track.children.length, 11); // Ensure a maximum of 10 items
         const maxIndex = Math.ceil(totalItems / visibleItems) - 1;
 
         track.style.transform = `translateX(-${currentIndex * itemWidth}px)`;
@@ -184,7 +182,7 @@ function initializeCarousel() {
     updateCarousel();
 }
 
-// Add text to marquee
+// marquee
 function addTextToMarquee() {
     const marquee = document.querySelector("marquee");
     let marqueeText = "";
@@ -195,7 +193,7 @@ function addTextToMarquee() {
     marquee.textContent = marqueeText;
   }
 
-// Cache utilities
+// caching
 function saveCache(key, data) {
     localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
 }
@@ -211,3 +209,41 @@ function checkCache(key) {
     }
     return data;
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const logoutBtn = document.getElementById('logout-btn');
+
+    try {
+        // get session status from the server
+        const response = await fetch('/api/session');
+        const sessionData = await response.json();
+
+        if (sessionData.loggedIn) {
+            // User is logged in
+            logoutBtn.textContent = 'Logout';
+
+            logoutBtn.addEventListener('click', async () => {
+                // Log out the user
+                const logoutResponse = await fetch('/logout', { method: 'GET' });
+                if (logoutResponse.ok) {
+                    window.location.href = '/login'; // go to login page after logout
+                } else {
+                    alert('Failed to logout. Please try again.');
+                }
+            });
+        } else {
+            // User is not logged in
+            logoutBtn.textContent = 'Login';
+
+            logoutBtn.addEventListener('click', () => {
+                window.location.href = '/login'; 
+            });
+        }
+    } catch (error) {
+        console.error('Error checking session status:', error);
+        logoutBtn.textContent = 'Login'; r
+        logoutBtn.addEventListener('click', () => {
+            window.location.href = '/login'; 
+        });
+    }
+});

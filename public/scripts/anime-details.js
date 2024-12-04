@@ -15,7 +15,7 @@ let anime;
 let animeID;
 let areDataFetched = false;
 
-// Fetch anime details based on the provided animeID
+// get anime details based on animeID as clicked
 function fetchAnimeDetails(animeID, perPageCount = 6) {
   $.ajax({
     url: "https://graphql.anilist.co",
@@ -120,7 +120,7 @@ function fetchAnimeDetails(animeID, perPageCount = 6) {
   });
 }
 
-// Get anime ID from URL
+// get anime ID from URL
 function getAnimeIDFromURL() {
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
@@ -233,17 +233,17 @@ function displayAnimeDetails(anime) {
   console.log(anime.rankings);
 
   if (anime.rankings && anime.rankings.length > 0) {
-    //Sort the rankings by priority
+    // sort the rankings by priority
     anime.rankings.sort((a, b) => {
       const priorityA = getRankingPriority(a);
       const priorityB = getRankingPriority(b);
       return priorityA - priorityB;
     });
 
-    //Take up to the top 2 rankings
+    // take up to the top 2 rankings
     rankingInfoList = anime.rankings.slice(0, 2).map(formatRanking);
 
-    // If fewer than 2 rankings, pad with N/A
+    // if fewer than 2 rankings, pad with N/A
     while (rankingInfoList.length < 2) {
       rankingInfoList.push({
         type: "N/A",
@@ -254,7 +254,7 @@ function displayAnimeDetails(anime) {
       });
     }
   } else {
-    //Handle no rankings
+    // if no rankings
     rankingInfoList.push({
       type: "N/A",
       context: "N/A",
@@ -417,7 +417,7 @@ function onPlayerError(event) {
       errorMessage =
         "The video requested was not found. This error occurs when a video is removed (for any reason) or if a video is set to private.";
       break;
-    case 101: //This is the most common error when the video is unavailable.
+    case 101: // when the video is unavailable.
       errorMessage =
         "The owner of the requested video does not allow it to be played in embedded players.";
       break;
@@ -432,7 +432,7 @@ function showError(message) {
   errorMessage.textContent = message;
   errorMessage.style.display = "block";
   const playerContainer = document.getElementById("ytplayer");
-  playerContainer.style.display = "none"; // Hide the player container if there is an error
+  playerContainer.style.display = "none"; // hide the player container if there is an error
 }
 
 function fetchCharacterDetails(animeId, characterCount = 6) {
@@ -545,8 +545,8 @@ function displayCharacterDetails(characters) {
 }
 
 function displayRelationDetails(relations) {
-  const relationContainer = document.querySelector(".relations-wrapper"); // Corrected selector
-  relationContainer.innerHTML = ""; // Clear previous content
+  const relationContainer = document.querySelector(".relations-wrapper"); 
+  relationContainer.innerHTML = ""; // clear content
 
   if (!relations || relations.length === 0) {
     console.log("No relations found");
@@ -589,7 +589,9 @@ function displayRelationDetails(relations) {
     `;
     relationContainer.innerHTML += relationItem;
   }
-}function fetchRecommendationDetails(animeId) {
+}
+
+function fetchRecommendationDetails(animeId) {
   $.ajax({
     url: "https://graphql.anilist.co",
     type: "POST",
@@ -634,7 +636,7 @@ function displayRelationDetails(relations) {
 
 function displayRecommendationDetails(recommendations) {
   const recommendationContainer = document.querySelector(".recommendations");
-  recommendationContainer.innerHTML = ""; // Clear previous content
+  recommendationContainer.innerHTML = "";
 
   if (!recommendations || recommendations.length === 0) {
     console.log("No recommendations found");
@@ -698,7 +700,7 @@ function fetchTagDetails(animeId) {
 
 function displayTagDetails(tags) {
   const tagContainer = document.querySelector(".tags");
-  tagContainer.innerHTML = ""; // Clear previous content
+  tagContainer.innerHTML = "";
 
   if (!tags || tags.length === 0) {
     console.log("No tags found");
@@ -769,7 +771,7 @@ function displayScoreDistribution(scoreDistribution) {
   const container = document.querySelector(".scores");
   const containerHeight = container.clientHeight;
 
-  // Find the maximum amount dynamically
+  // find the maximum amount dynamically for display
   let maxAmount = 0;
   for (const score in scoreDistribution) {
     maxAmount = Math.max(maxAmount, scoreDistribution[score].amount);
@@ -1112,3 +1114,41 @@ function fetchCharacterDetails2(animeId) {
     },
   });
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const logoutBtn = document.getElementById('logout-btn');
+
+  try {
+      // Fetch session status from the server
+      const response = await fetch('/api/session');
+      const sessionData = await response.json();
+
+      if (sessionData.loggedIn) {
+          // User is logged in
+          logoutBtn.textContent = 'Logout';
+
+          logoutBtn.addEventListener('click', async () => {
+              // Log out the user
+              const logoutResponse = await fetch('/logout', { method: 'GET' });
+              if (logoutResponse.ok) {
+                  window.location.href = '/login'; // Redirect to login page after logout
+              } else {
+                  alert('Failed to logout. Please try again.');
+              }
+          });
+      } else {
+          // User is not logged in
+          logoutBtn.textContent = 'Login';
+
+          logoutBtn.addEventListener('click', () => {
+              window.location.href = '/login'; // Redirect to login page
+          });
+      }
+  } catch (error) {
+      console.error('Error checking session status:', error);
+      logoutBtn.textContent = 'Login'; // Default to "Login" on error
+      logoutBtn.addEventListener('click', () => {
+          window.location.href = '/login'; // Redirect to login page
+      });
+  }
+});
