@@ -71,9 +71,33 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
             <div class="user-options">
               <div class="list-options">
                 <button id="list-btn">Add To List</button>
-                <button id="list-options">
-                  <i class="fa-light fa-chevron-down"></i>
-                </button>
+                <div class="list-options-wrapper">
+                  <button id="list-options">
+                    <i class="fa-light fa-chevron-down"></i>
+                  </button>
+                  <div class="edit-anime-status">
+                    <button type="button" class="status-btn">
+                      Watching
+                      <span><i class="fa-solid fa-check"></i></span>
+                    </button>
+                    <button type="button" class="status-btn">
+                      Rewatching
+                      <span><i class="fa-solid fa-check"></i></span>
+                    </button>
+                    <button type="button" class="status-btn">
+                      Completed
+                      <span><i class="fa-solid fa-check"></i></span>
+                    </button>
+                    <button type="button" class="status-btn">
+                      Paused
+                      <span><i class="fa-solid fa-check"></i></span>
+                    </button>
+                    <button type="button" class="status-btn">
+                      Dropped
+                      <span><i class="fa-solid fa-check"></i></span>
+                    </button>
+                  </div>
+                </div>
               </div>
               <div class="add-to-fav">
                 <button id="fav-btn">
@@ -310,5 +334,26 @@ https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
     <footer></footer>
     <script src="../scripts/anime-details.js"></script>
     <script src="../scripts/load-footer.js"></script>
+    <script>
+      const editAnimeStatus = document.querySelector(".edit-anime-status");
+      const statusBtns = document.querySelectorAll(".status-btn");
+
+      statusBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          statusBtns.forEach((btn) => {
+            btn.classList.remove("active-status");
+            btn.querySelector("span").style.display = "none";
+          });
+          btn.classList.add("active-status");
+          btn.querySelector("span").style.display = "inline";
+        });
+      });
+
+      const listOptionBtn = document.getElementById("list-options");
+
+      listOptionBtn.addEventListener("click", () => {
+        editAnimeStatus.classList.toggle("show-status");
+      });
+    </script>
   </body>
 </html>

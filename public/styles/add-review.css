@@ -165,7 +165,7 @@ main {
 }
 
 #logout-btn:hover {
-  background: var(--main-color);
+  background: rgb(64, 19, 142);
 }
 
 .left {
