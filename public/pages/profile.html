@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../styles/profile.css" />
+    <link rel="stylesheet" href="../styles/footer.css" />
+    <link rel="shortcut icon" href="../images/logo.svg" type="image/x-icon" />
+    <link
+      href="https://cdn.jsdelivr.net/gh/eliyantosarage/font-awesome-pro@main/fontawesome-pro-6.5.2-web/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/all.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-thin.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-solid.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-regular.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://site-assets.fontawesome.com/releases/v6.5.2/css/sharp-light.css"
+    />
+    <script src="
+        https://cdn.jsdelivr.net/npm/@apollo/client@3.11.8/invariantErrorCodes.min.js
+        "></script>
+    <script src="
+        https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js
+        "></script>
+    <script src="
+        https://cdn.jsdelivr.net/npm/graphql@16.9.0/index.min.js
+        "></script>
+    <title>Placeholder's profile - AniMatch</title>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo">
+          <img src="../images/logo.svg" alt="logo" />
+        </div>
+        <nav>
+          <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="about.html">Explore</a></li>
+            <li><a href="contact.html">Recommendations</a></li>
+            <li><a href="contact.html">Profile</a></li>
+          </ul>
+        </nav>
+      </header>
+      <main>
+        <div class="profile-banner-container">
+          <div class="profile-banner">
+            <div class="profile-wrapper">
+              <div class="profile-pic">
+                <img src="../images/avatar.png" alt="profile-pic" />
+              </div>
+              <h2>username</h2>
+            </div>
+          </div>
+        </div>
+        <div class="sections">
+          <button type="button" id="anime-list-btn" class="active-section">
+            Anime List
+          </button>
+          <button type="button" id="favorites-btn">Favorites</button>
+          <button type="button" id="reviews-btn">Reviews</button>
+        </div>
+        <div class="anime-list-container">
+          <div class="anime-list-wrapper">
+            <div class="anime-list-left">
+              <h6>Lists</h6>
+              <div class="categories">
+                <button type="button" class="category-btn active-category">
+                  All
+                </button>
+                <button type="button" class="category-btn">Watching</button>
+                <button type="button" class="category-btn">Rewatching</button>
+                <button type="button" class="category-btn">Completed</button>
+                <button type="button" class="category-btn">Paused</button>
+                <button type="button" class="category-btn">Dropped</button>
+                <button type="button" class="category-btn">Planning</button>
+              </div>
+            </div>
+            <div class="anime-list-right">
+              <div class="anime-list-section" id="list-section">
+                <div class="anime-list-item" id="watching-categ">
+                  <h2>Watching</h2>
+                  <div class="anime-list-table">
+                    <div class="anime-list-header">
+                      <!-- Added header row -->
+                      <div class="anime-cover-title">.</div>
+                      <div class="anime-title-header">Title</div>
+                      <div class="anime-score-header">Score</div>
+                      <div class="anime-progress-header">Progress</div>
+                      <div class="anime-type-header">Type</div>
+                    </div>
+                    <div class="anime-list-row">
+                      <div class="anime-img">
+                        <img src="../images/avatar.png" alt="" />
+                      </div>
+                      <div class="anime-title">Lorem ipsum dolor sit amet.</div>
+                      <div class="anime-score">100</div>
+                      <div class="anime-progress">1/24</div>
+                      <div class="anime-type">TV</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="anime-list-item" id="rewatching-categ">
+                  <h2>Rewatching</h2>
+                  <div class="anime-list-table">
+                    <div class="anime-list-header">
+                      <div class="anime-cover-title">.</div>
+                      <div class="anime-title-header">Title</div>
+                      <div class="anime-score-header">Score</div>
+                      <div class="anime-progress-header">Progress</div>
+                      <div class="anime-type-header">Type</div>
+                    </div>
+                    <div class="anime-list-row">
+                      <div class="anime-img">
+                        <img src="../images/avatar.png" alt="" />
+                      </div>
+                      <div class="anime-title">Lorem ipsum dolor sit amet.</div>
+                      <div class="anime-score">100</div>
+                      <div class="anime-progress">1/24</div>
+                      <div class="anime-type">TV</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="anime-list-item" id="completed-categ">
+                  <h2>Completed</h2>
+                  <div class="anime-list-table">
+                    <div class="anime-list-header">
+                      <!-- Added header row -->
+                      <div class="anime-cover-title">.</div>
+                      <div class="anime-title-header">Title</div>
+                      <div class="anime-score-header">Score</div>
+                      <div class="anime-progress-header">Progress</div>
+                      <div class="anime-type-header">Type</div>
+                    </div>
+                    <div class="anime-list-row">
+                      <div class="anime-img">
+                        <img src="../images/avatar.png" alt="" />
+                      </div>
+                      <div class="anime-title">Lorem ipsum dolor sit amet.</div>
+                      <div class="anime-score">100</div>
+                      <div class="anime-progress">1/24</div>
+                      <div class="anime-type">TV</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="anime-list-item" id="paused-categ">
+                <h2>Paused</h2>
+                <div class="anime-list-table">
+                  <div class="anime-list-header">
+                    <div class="anime-cover-title">.</div>
+                    <div class="anime-title-header">Title</div>
+                    <div class="anime-score-header">Score</div>
+                    <div class="anime-progress-header">Progress</div>
+                    <div class="anime-type-header">Type</div>
+                  </div>
+                  <div class="anime-list-row">
+                    <div class="anime-img">
+                      <img src="../images/avatar.png" alt="" />
+                    </div>
+                    <div class="anime-title">Lorem ipsum dolor sit amet.</div>
+                    <div class="anime-score">100</div>
+                    <div class="anime-progress">1/24</div>
+                    <div class="anime-type">TV</div>
+                  </div>
+                </div>
+              </div>
+              <div class="anime-list-item" id="dropped-categ">
+                <h2>Dropped</h2>
+                <div class="anime-list-table">
+                  <div class="anime-list-header">
+                    <div class="anime-cover-title">.</div>
+                    <div class="anime-title-header">Title</div>
+                    <div class="anime-score-header">Score</div>
+                    <div class="anime-progress-header">Progress</div>
+                    <div class="anime-type-header">Type</div>
+                  </div>
+                  <div class="anime-list-row">
+                    <div class="anime-img">
+                      <img src="../images/avatar.png" alt="" />
+                    </div>
+                    <div class="anime-title">Lorem ipsum dolor sit amet.</div>
+                    <div class="anime-score">100</div>
+                    <div class="anime-progress">1/24</div>
+                    <div class="anime-type">TV</div>
+                  </div>
+                </div>
+              </div>
+              <div class="anime-list-item" id="planning-categ">
+                <h2>Planning</h2>
+                <div class="anime-list-table">
+                  <div class="anime-list-header">
+                    <div class="anime-cover-title">.</div>
+                    <div class="anime-title-header">Title</div>
+                    <div class="anime-score-header">Score</div>
+                    <div class="anime-progress-header">Progress</div>
+                    <div class="anime-type-header">Type</div>
+                  </div>
+                  <div class="anime-list-row">
+                    <div class="anime-img">
+                      <img src="../images/avatar.png" alt="" />
+                    </div>
+                    <div class="anime-title">Lorem ipsum dolor sit amet.</div>
+                    <div class="anime-score">100</div>
+                    <div class="anime-progress">1/24</div>
+                    <div class="anime-type">TV</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="favorites-wrapper">
+          <div class="favorites-section">
+            <h6>Anime</h6>
+            <div class="favorites">
+              <div class="favorite-item">
+                <img src="../images/avatar.png" alt="" />
+                <button type="button" class="remove-item">
+                  <i class="fa-sharp fa-solid fa-circle-xmark"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="reviews-container">
+          <div class="reviews">
+            <div class="review-item">
+              <div id="review-banner">
+                <img src="" alt="" />
+              </div>
+              <h5 id="review-title">review</h5>
+              <p id="review-summary">summary</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <footer></footer>
+  </body>
+  <script src="../scripts/load-footer.js"></script>
+</html>
