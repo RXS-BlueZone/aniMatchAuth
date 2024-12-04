@@ -133,11 +133,11 @@ async function fetchAnime(gridId, params, perPage, isTop10 = false) {
   `;
 
   const variables = {
-    page: currentPage,
+    page: currentPage, // Use the current page for pagination
     perPage,
     sort,
-    season: season || undefined, // Include season if set
-    seasonYear: seasonYear || undefined, // Include seasonYear if set
+    season: season || undefined,
+    seasonYear: seasonYear || undefined,
     genre: genre || undefined,
     format: format || undefined,
     status: status || undefined
@@ -153,7 +153,7 @@ async function fetchAnime(gridId, params, perPage, isTop10 = false) {
   if (isTop10) {
     renderTop10(data.data.Page.media);
   } else {
-    renderAnime(data.data.Page.media, gridId);
+    appendAnime(data.data.Page.media, gridId); // Use appendAnime instead of renderAnime
   }
 }
 
@@ -167,12 +167,15 @@ const renderAnime = (animeList, gridId) => {
     const animeCard = document.createElement("div");
     animeCard.className = "anime-card";
     animeCard.innerHTML = `
-      <img src="${anime.coverImage.large}" alt="${anime.title.romaji}">
-      <h3>${anime.title.romaji}</h3>
+      <a href="/anime-details?id=${anime.id}" class="anime-link" style="text-decoration: none; color: #161616">
+        <img src="${anime.coverImage.large}" alt="${anime.title.romaji}">
+        <h3>${anime.title.romaji}</h3>
+      </a>
     `;
     grid.appendChild(animeCard);
   });
 };
+
 
 const renderTop10 = (animeList) => {
   const grid = document.getElementById("top-10-grid");
@@ -340,7 +343,7 @@ const renderSearchResults = (animeList) => {
   sortedResultsSection.style.display = "block"; // Show search results section
   hideAllDefaultSections(); // Hide default sections
 
-  if (animeList.length === 0) {
+  if (!animeList || animeList.length === 0) {
     sortedGrid.innerHTML = `<p>No results found for the current search and filters.</p>`;
     return;
   }
@@ -348,13 +351,22 @@ const renderSearchResults = (animeList) => {
   animeList.forEach((anime) => {
     const animeCard = document.createElement("div");
     animeCard.className = "anime-card";
+
+    // Validate image and title properties
+    const coverImage = anime.coverImage?.large || "https://via.placeholder.com/150"; // Placeholder for missing images
+    const title = anime.title?.romaji || "No Title Available";
+
     animeCard.innerHTML = `
-      <img src="${anime.coverImage.large}" alt="${anime.title.romaji}">
-      <h3>${anime.title.romaji}</h3>
+      <a href="/anime-details?id=${anime.id}" class="anime-link" style="text-decoration: none; color: #161616;">
+        <img src="${coverImage}" alt="${title}">
+        <h3>${title}</h3>
+      </a>
     `;
+
     sortedGrid.appendChild(animeCard);
   });
 };
+
 
 // ** Hide All Default Sections **
 const hideAllDefaultSections = () => {

@@ -75,4 +75,14 @@ router.get('/explore', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'explore.html'));
 });
 
+// **Fixed Route for Anime Details**
+router.get('/anime-details', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'anime-details.html'));
+});
+
+
+router.get('/profile', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'profile.html'));
+});
+
 module.exports = router;
