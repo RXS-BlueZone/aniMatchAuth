@@ -1,29 +1,43 @@
 const express = require('express');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const router = express.Router();
 
+// Initialize Supabase
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // Middleware to check authentication
 function isAuthenticated(req, res, next) {
-    if (req.session.user) {
+    if (req.session && req.session.user) {
         return next();
     }
-    return res.redirect('/login'); // Redirect to login if not authenticated
+    return res.sendFile(path.join(__dirname, '../public', 'signup-prompt.html')); // Serve sign-up prompt if not authenticated
 }
 
 // Middleware to check onboarding completion
 async function isOnboardingComplete(req, res, next) {
     try {
-        if (req.session.user && req.session.user.genresCompleted) {
-            return next(); // Skip if onboarding is already complete
+        // Skip if the user is explicitly navigating to onboarding
+        if (req.path === '/onboarding') {
+            return next();
         }
 
-        const userId = req.session.user?.id; // Ensure user ID exists in session
-        if (!userId) {
-            console.error('User ID missing in session');
-            return res.redirect('/onboarding');
+        // Skip if the user is not logged in
+        if (!req.session || !req.session.user) {
+            return next(); // Allow access to public routes
         }
 
+        // Allow access if onboarding is already complete
+        if (req.session.user.genresCompleted) {
+            return next();
+        }
+
+        const userId = req.session.user.id;
+
+        // Fetch genres from the database
         const { data: genres, error } = await supabase
             .from('GENRE_PREFERENCES')
             .select('genre_selected')
@@ -34,18 +48,23 @@ async function isOnboardingComplete(req, res, next) {
             return res.redirect('/onboarding');
         }
 
+        // Mark onboarding as complete if the user has selected at least 3 genres
         if (genres && genres.length >= 3) {
-            // Mark onboarding as complete in the session
-            req.session.user.genresCompleted = true;
+            req.session.user.genresCompleted = true; // Mark onboarding as complete
             return next();
         }
 
-        return res.redirect('/onboarding'); // Redirect to onboarding if incomplete
+        // Redirect to onboarding if genres are not completed
+        return res.redirect('/onboarding');
     } catch (err) {
         console.error('Unexpected error in onboarding check:', err);
         return res.redirect('/onboarding');
     }
 }
+
+
+
+
 
 // Route for the login page
 router.get('/login', (req, res) => {
@@ -60,29 +79,65 @@ router.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'signup.html'));
 });
 
-// Route for the homepage (index.html) - Requires authentication and onboarding
-router.get('/index', isAuthenticated, isOnboardingComplete, (req, res) => {
+// Route for the homepage (index.html) - Requires onboarding completion
+router.get('/index', isOnboardingComplete, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-// Route for the onboarding page - Requires authentication
+// Route for the recommendations page - Requires onboarding completion
+router.get('/recommendations', isAuthenticated, isOnboardingComplete, (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'recommendations.html'));
+});
+
+router.get('/profile', isAuthenticated, isOnboardingComplete, (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'profile.html'));
+});
+
+// Route for the onboarding page - Requires authentication but not onboarding completion
 router.get('/onboarding', isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'onboarding.html'));
 });
 
-// Route for the explore page
+// Public routes
 router.get('/explore', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'explore.html'));
 });
 
-// **Fixed Route for Anime Details**
 router.get('/anime-details', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'anime-details.html'));
 });
 
+// API to fetch recommendations based on user's genre preferences
+router.get('/api/recommendations', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized. Please log in or sign up.' });
+    }
 
-router.get('/profile', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public', 'profile.html'));
+    try {
+        const { data: genres, error } = await supabase
+            .from('GENRE_PREFERENCES')
+            .select('genre_selected')
+            .eq('user_id', req.session.user.id);
+
+        if (error) {
+            console.error('Error fetching genres:', error);
+            return res.status(500).json({ error: 'Failed to fetch genres.' });
+        }
+
+        if (!genres || genres.length === 0) {
+            return res.status(404).json({ error: 'No genre preferences found. Please set your preferences first.' });
+        }
+
+        res.status(200).json({ genres });
+    } catch (err) {
+        console.error('Error in recommendations API:', err);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+// Route for the signup-prompt page
+router.get('/prompt', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'signup-prompt.html'));
 });
 
 module.exports = router;

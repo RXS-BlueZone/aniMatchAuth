@@ -23,15 +23,11 @@ router.post('/api/save-genres', async (req, res) => {
     try {
         const userId = req.session.user.id;
 
-        // Check if the user already has at least 3 genres
-        const { data: existingGenres } = await supabase
+        // Delete existing genres for the user
+        await supabase
             .from('GENRE_PREFERENCES')
-            .select('genre_selected')
+            .delete()
             .eq('user_id', userId);
-
-        if (existingGenres && existingGenres.length >= 3) {
-            return res.status(400).send('You have already selected your genres.');
-        }
 
         // Insert new genres
         const genreEntries = genres.map((genre) => ({
@@ -49,7 +45,8 @@ router.post('/api/save-genres', async (req, res) => {
         // Update session to mark onboarding as complete
         req.session.user.genresCompleted = true;
 
-        res.status(200).send('Genres saved successfully.');
+        // Redirect back to recommendations after onboarding
+        res.status(200).json({ redirect: '/recommendations' });
     } catch (err) {
         console.error('Unexpected error:', err);
         res.status(500).send('Server error. Please try again later.');
@@ -57,4 +54,3 @@ router.post('/api/save-genres', async (req, res) => {
 });
 
 module.exports = router;
-

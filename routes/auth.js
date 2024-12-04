@@ -156,25 +156,29 @@ router.post('/login', async (req, res) => {
             .select('genre_selected')
             .eq('user_id', user.user_id);
 
+        const genresCompleted = genres && genres.length >= 3;
+
         // Set session
         req.session.user = {
             id: user.user_id,
             username: user.user_username,
             email: user.user_email,
-            genresCompleted: genres && genres.length >= 3,
+            genresCompleted,
         };
 
-        if (!req.session.user.genresCompleted) {
-            return res.status(200).json({ redirect: '/onboarding' });
+        // Redirect based on onboarding status
+        if (!genresCompleted) {
+            return res.status(200).json({ redirect: '/onboarding' }); // First-time login
         }
 
-        res.status(200).json({ redirect: '/index' });
+        res.status(200).json({ redirect: '/index' }); // Existing user
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
+    
 // Logout route
 router.get('/logout', (req, res) => {
     req.session.destroy((err) => {

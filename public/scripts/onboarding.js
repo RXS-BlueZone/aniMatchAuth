@@ -5,6 +5,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Onboarding completion check
     function checkOnboardingCompletion() {
+        const currentPath = window.location.pathname;
+
+        // Skip redirection if the user is already on the onboarding page
+        if (currentPath === "/onboarding") {
+            fetchGenres(); // Fetch genres to display for user
+            updateButtonState(); // Initialize button state
+            return;
+        }
+
         fetch("/api/session") // Backend endpoint to check session and onboarding status
             .then((response) => response.json())
             .then((data) => {
@@ -87,8 +96,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 contentType: "application/json",
                 data: JSON.stringify({ genres: genreList }),
                 success: function () {
-                    // Redirect to the home page after successfully saving genres
-                    window.location.href = "/index";
+                    // Redirect to recommendations page after successfully saving genres
+                    const referrer = document.referrer;
+                    if (referrer.includes("/recommendations")) {
+                        window.location.href = "/recommendations";
+                    } else {
+                        window.location.href = "/index";
+                    }
                 },
                 error: function (error) {
                     console.error("Error saving genres:", error);
@@ -102,6 +116,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Run onboarding completion check on page load
     checkOnboardingCompletion();
-
-    
 });

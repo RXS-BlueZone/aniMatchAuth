@@ -266,8 +266,8 @@ searchBar.addEventListener("input", (event) => {
 // ** Fetch Search Results with Filters and Sort **
 const fetchSearchResults = async (searchQuery) => {
   const query = `
-    query ($search: String, $page: Int, $sort: [MediaSort], $genre: String, $season: MediaSeason, $seasonYear: Int, $format: MediaFormat, $status: MediaStatus) {
-      Page(page: $page, perPage: 10) {
+    query ($search: String, $page: Int, $sort: [MediaSort], $genre: String, $season: MediaSeason, $seasonYear: Int, $format: MediaFormat, $status: MediaStatus) 
+     {
         media(search: $search, type: ANIME, sort: $sort, genre: $genre, season: $season, seasonYear: $seasonYear, format: $format, status: $status) {
           id
           title {
