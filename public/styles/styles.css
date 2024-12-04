@@ -131,6 +131,22 @@ nav ul li a:hover::after {
   color: var(--light-main-color) !important;
 }
 
+#logout-btn {
+  background: var(--light-main-color);
+  border: none;
+  color: white;
+  font-family: var(--secondary-font);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.3s ease;
+  padding: 10px 20px;
+  border-radius: 4px;
+}
+
+#logout-btn:hover {
+  background: var(--main-color);
+}
+
 main {
   display: flex;
   justify-content: center;
