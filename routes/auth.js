@@ -77,24 +77,41 @@ router.post('/signup', async (req, res) => {
         errors.push({ field: 'terms', error: 'You must agree to the Terms and Privacy Policy.' });
     }
 
-    // Return all validation errors
+    // Proceed to conflict validation even if there are validation errors
+    try {
+        // Check for existing users by username or email
+        const { data: existingUsers, error } = await supabase
+            .from('USERS')
+            .select('user_username, user_email')
+            .or(`user_email.eq.${user_email},user_username.eq.${user_username}`);
+    
+        if (error) {
+            console.error('Supabase query error:', error);
+            errors.push({ field: 'all', error: 'Server error during validation. Please try again later.' });
+        } else {
+            console.log('Existing users:', existingUsers); // Log database response
+            // Collect all conflicting fields
+            existingUsers.forEach((user) => {
+                if (user.user_email === user_email) {
+                    errors.push({ field: 'email', error: 'Email is already registered.' });
+                }
+                if (user.user_username === user_username) {
+                    errors.push({ field: 'username', error: 'Username is already registered.' });
+                }
+            });
+        }
+    } catch (err) {
+        console.error('Database query error:', err);
+        errors.push({ field: 'all', error: 'Server error during validation. Please try again later.' });
+    }
+    
+
+    // Return all collected errors
     if (errors.length > 0) {
         return res.status(400).json({ errors });
     }
 
     try {
-        // Check for existing users by username or email
-        const { data: existingUsers } = await supabase
-            .from('USERS')
-            .select('user_username, user_email')
-            .or(`user_email.eq.${user_email},user_username.eq.${user_username}`);
-
-        if (existingUsers.length > 0) {
-            const conflictField = existingUsers.some(user => user.user_email === user_email) ? 'email' : 'username';
-            errors.push({ field: conflictField, error: `${conflictField} is already registered.` });
-            return res.status(400).json({ errors });
-        }
-
         // Hash password and insert new user
         const hashedPassword = await bcrypt.hash(user_password, 12);
         await supabase.from('USERS').insert([{ user_username, user_email, user_password: hashedPassword }]);
@@ -107,6 +124,7 @@ router.post('/signup', async (req, res) => {
         });
     }
 });
+
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -166,5 +184,6 @@ router.get('/logout', (req, res) => {
         res.redirect('/login');
     });
 });
+
 
 module.exports = router;
